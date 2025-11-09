@@ -1,0 +1,232 @@
+name: Useful
+version: '5.8.2'
+main: dev.ethan.useful.Main
+api-version: '1.21'
+authors: [ Ethan ]
+description: Useful commands for your server. Made by Ethan.
+depend:
+  - LuckPerms
+  - ProtocolLib
+  - Citizens
+  - PlaceholderAPI
+  - packetevents
+commands:
+  kms:
+    description: Self-kill
+    usage: /<command>
+    permission: useful.default
+    permission-message: Unknown command. Type \"/help\" for help.
+  heal:
+    description: Heal yourself
+    usage: /<command>
+    permission: useful.admin
+    permission-message: Unknown command. Type \"/help\" for help.
+  gms:
+    description: Set Gamemode to Survival
+    usage: /<command>
+    permission: useful.admin
+    permission-message: Unknown command. Type \"/help\" for help.
+  gma:
+    description: Set Gamemode to Adventure
+    usage: /<command>
+    permission: useful.admin
+    permission-message: Unknown command. Type \"/help\" for help.
+  gmc:
+    description: Set Gamemode to Creative
+    usage: /<command>
+    permission-message: Unknown command. Type \"/help\" for help.
+    permission: useful.admin
+  gmsp:
+    description: Set Gamemode to Spectator
+    usage: /<command>
+    permission-message: Unknown command. Type \"/help\" for help.
+    permission: useful.admin
+  boom:
+    description: Admin troll tool
+    usage: /boom <Player>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  freeze:
+    description: Freeze a player
+    usage: /freeze
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  unfreeze:
+    description: Unfreeze a player
+    usage: /unfreeze
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  sudo:
+    description: Sudo
+    usage: /sudo <player> <message || command>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  feather:
+    description: Special feather
+    usage: /feather
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  god:
+    description: Enable fly for a player
+    usage: /god
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  gun:
+    description: Gives player a special feather
+    usage: /gun
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  msg:
+    description: Send direct message to a player
+    usage: /msg <player> <msg>
+    permission: useful.default
+    permission-message: Unknown command. Type "/help" for help.
+  r:
+    description: Reply a direct message from a player
+    usage: /r <msg>
+    permission: useful.default
+    permission-message: Unknown command. Type "/help" for help.
+  tell:
+    description: Send direct message to a player
+    usage: /tell <player> <msg>
+    permission: useful.default
+    permission-message: Unknown command. Type "/help" for help.
+  w:
+    description: Send direct message to a player
+    usage: /w <player> <msg>
+    permission: useful.default
+    permission-message: Unknown command. Type "/help" for help.
+  hat:
+    description: Equip the item in your hand to your helmet slot
+    usage: /hat
+    permission: useful.default
+    permission-message: Unknown command. Type "/help" for help.
+  dupe:
+    description: Duplicate iten in hand
+    usage: /dupe
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  ips:
+    description: Gets target's ips
+    usage: /ips <Player>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  nick:
+    description: Change display-name
+    usage: /nick <nick>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  unnick:
+    description: Reset display-name
+    usage: /unnick
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  alts:
+    description: Gets target's alt
+    usage: /alts <Player>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  botf:
+    description: Spawn a NPC
+    usage: /botf <name>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  bot:
+    description: Spawn a NPC
+    usage: /bot <name>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  removenpc:
+    description: Despawn all NPC that you spawned
+    usage: /removenpc <name>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  nuke:
+    description: Throw a Netty packet nuke on a player
+    usage: /crash <Player>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  sword:
+    description: Gives player a special sword
+    usage: /sword
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  dmlisten:
+    description: Toggle listening to direct messages.
+    usage: /dmlisten [on|off]
+    permission: useful.admin
+    permission-message: You do not have permission to use this command.
+  tpa:
+    description: Request to teleport to another player.
+    usage: /tpa <player>
+  tpahere:
+    description: Request another player to teleport to you.
+    usage: /tpahere <player|all>
+  tpaccept:
+    description: Accept a teleport request.
+    usage: /tpaccept
+  tpdeny:
+    description: Deny a teleport request.
+    usage: /tpdeny
+  homes:
+    description: List your homes.
+    usage: /homes
+  sethome:
+    description: Set a home.
+    usage: /sethome <name>
+  home:
+    description: Teleport to a home.
+    usage: /home <name>
+  delhome:
+    description: Delete a home.
+    usage: /delhome <name>
+  block:
+    usage: /tpblock <player>
+  unblock:
+    usage: /tpunblock <player>
+  blocklist:
+    usage: /tpblocklist
+  uuid:
+    description: Get a player's UUID
+    usage: /uuid <Player>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  fly:
+    description: Enable fly for a player
+    usage: /fly
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  explosion:
+    description: Crash method
+    usage: /explosion <Player>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  setxp:
+    description: set xp
+    usage: /setxp <amount>
+    permission: enms.admin
+    permission-message: Unknown command. Type "/help" for help.
+  l:
+    description: Lobby
+    usage: /<command>
+  position:
+    description: Crash method
+    usage: /position <Player>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  particle:
+    description: Crash method
+    usage: /particle <Player>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+
+permissions:
+  useful.default:
+    description: Default perms
+    default: true
+  useful.vip:
+    description: VIP perms
+    default: op
+  useful.admin:
+    description: Admin perms
+    default: op
