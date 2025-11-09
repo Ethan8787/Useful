@@ -4,7 +4,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.ethan.useful.Main;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
@@ -19,7 +21,7 @@ import java.util.logging.Level;
 import static de.myzelyam.api.vanish.VanishAPI.isInvisible;
 import static dev.ethan.useful.Main.*;
 
-public class PlayerUtils {
+public class PlayerUtil {
     public static void shoot(Player player) {
         Location eyeLoc = player.getEyeLocation();
         Vector direction = eyeLoc.getDirection().normalize();

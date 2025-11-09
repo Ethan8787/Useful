@@ -94,13 +94,11 @@ public class TranslationUtil {
         ENTITY_NAME_MAP.put(EntityType.ZOMBIE_HORSE, "殭屍馬");
         ENTITY_NAME_MAP.put(EntityType.ZOMBIE_VILLAGER, "殭屍村民");
         ENTITY_NAME_MAP.put(EntityType.ZOMBIFIED_PIGLIN, "殭屍化豬布林");
-
     }
 
     public static String getDeathMessageByCause(String prefix, String name, EntityDamageEvent.DamageCause cause) {
         prefix = prefix == null ? "" : prefix;
         name = name == null ? "某人" : name;
-
         return "§4死亡" + " §7» " + prefix + name + "§f " + switch (cause) {
             case DROWNING -> "被淹死了";
             case FALL -> "摔死了";
@@ -126,18 +124,17 @@ public class TranslationUtil {
         };
     }
 
-    public static String getCustomTranslatedEntityName(Entity entity) {
-        return ENTITY_NAME_MAP.getOrDefault(entity.getType(), entity.getName());
+    public static String getCustomTranslatedEntityName(Entity e) {
+        return ENTITY_NAME_MAP.getOrDefault(e.getType(), e.getName());
     }
 
-    public static String getCustomTranslatedItemName(ItemStack item) {
-        if (item != null && item.getType() != Material.AIR) {
-            String name = ITEM_NAME_MAP.getOrDefault(item.getType(),
-                    (item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName())
-                            ? item.getItemMeta().getDisplayName() : "");
+    public static String getCustomTranslatedItemName(ItemStack i) {
+        if (i != null && i.getType() != Material.AIR) {
+            String name = ITEM_NAME_MAP.getOrDefault(i.getType(),
+                    (i.hasItemMeta() && Objects.requireNonNull(i.getItemMeta()).hasDisplayName())
+                            ? i.getItemMeta().getDisplayName() : "");
             return name != null ? name : "";
         }
         return "";
     }
-
 }

@@ -1,6 +1,7 @@
 package dev.ethan.useful.events;
 
 import dev.ethan.useful.Main;
+import dev.ethan.useful.utils.IPTrackerUtil;
 import dev.ethan.useful.utils.TranslationUtil;
 import dev.iiahmed.disguise.Disguise;
 import dev.iiahmed.disguise.DisguiseManager;
@@ -18,24 +19,25 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.*;
 
 import static dev.ethan.useful.Main.*;
-import static dev.ethan.useful.utils.IPTrackerUtils.saveIpsFile;
-import static dev.ethan.useful.utils.LuckPermsUtils.getPlayerPrefix;
-import static dev.ethan.useful.utils.LuckPermsUtils.getPlayerSuffix;
-import static dev.ethan.useful.utils.MessageUtils.config;
-import static dev.ethan.useful.utils.PlayerUtils.getUUID;
-import static dev.ethan.useful.utils.PlayerUtils.shoot;
+import static dev.ethan.useful.utils.LuckPermsUtil.getPlayerPrefix;
+import static dev.ethan.useful.utils.LuckPermsUtil.getPlayerSuffix;
+import static dev.ethan.useful.utils.MessageUtil.config;
+import static dev.ethan.useful.utils.PlayerUtil.getUUID;
+import static dev.ethan.useful.utils.PlayerUtil.shoot;
 import static dev.ethan.useful.utils.TranslationUtil.getDeathMessageByCause;
-import static dev.ethan.useful.utils.ValorantAceUtils.playKillSound;
+import static dev.ethan.useful.utils.AceUtil.playKillSound;
 
 public class GameListener implements Listener {
     private static final Map<UUID, Long> shootCooldown = new HashMap<>();
@@ -43,8 +45,8 @@ public class GameListener implements Listener {
     public static final Map<UUID, Location> deathLocation = new HashMap<>();
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player p = event.getPlayer();
+    public void onPlayerJoin(PlayerJoinEvent e) {
+        Player p = e.getPlayer();
         String prefix = getPlayerPrefix(p);
         String suffix = getPlayerSuffix(p);
         UUID uuid = p.getUniqueId();
@@ -55,170 +57,149 @@ public class GameListener implements Listener {
         String playerName = p.getName();
         String ipAddress = Objects.requireNonNull(p.getAddress()).getAddress().getHostAddress();
         List<String> ipList = ipsConfig.getStringList(playerName);
-
         if (config.getBoolean("listeners." + uuid, false)) {
             dmListeners.add(uuid);
             p.sendMessage(Plugin_Prefix + "§a您仍在監聽私訊。");
         }
-
         if (!ipList.contains(ipAddress)) {
             ipList.add(ipAddress);
         }
-        if (p.hasPermission("useful.admin")) {
-            p.playSound(p.getLocation(), Sound.ENTITY_GUARDIAN_DEATH,1.0f, 1.0f);
+        if (p.isOp()) {
+            p.playSound(p.getLocation(), Sound.ENTITY_GUARDIAN_DEATH, 1.0f, 1.0f);
         } else {
             p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
         }
         ipsConfig.set(playerName, ipList);
-        saveIpsFile();
+        IPTrackerUtil.save();
         if (nick != null) {
             UUID skinUUID;
             try {
                 skinUUID = getUUID(nick);
-            } catch (Exception e) {
+            } catch (Exception ex) {
                 skinUUID = null;
             }
-
-            Disguise disguise = Disguise.builder()
+            Disguise d = Disguise.builder()
                     .setName(nick)
                     .setSkin(SkinAPI.MOJANG, Objects.requireNonNullElseGet(skinUUID, p::getUniqueId))
                     .setEntityType(EntityType.PLAYER)
                     .build();
-
-            DisguiseManager.getProvider().disguise(p, disguise);
+            DisguiseManager.getProvider().disguise(p, d);
             p.setDisplayName(nick);
             p.setPlayerListName(nick);
 
             p.setMetadata("nicked", new FixedMetadataValue(Main.getInstance(), true));
-            event.setJoinMessage("§8[§d+§8] " + prefix + nick + suffix);
-            sendActionBar(p, "§d» §f歡迎回來 " + prefix + nick + suffix + " §d«", 7);
+            e.setJoinMessage("§8[§d+§8] " + prefix + nick + suffix);
+            p.sendActionBar("§d» §f歡迎回來 " + prefix + nick + suffix + " §d«");
             return;
         }
-        if (event.getPlayer().hasPlayedBefore()) {
-            event.setJoinMessage(two);
+        if (e.getPlayer().hasPlayedBefore()) {
+            e.setJoinMessage(two);
         } else {
-            event.setJoinMessage(one);
+            e.setJoinMessage(one);
         }
-        sendActionBar(p, three, 7);
+        p.sendActionBar(three);
     }
 
     @EventHandler
-    public void onPlayerMove(PlayerMoveEvent event) {
-        if (frozenPlayers.contains(event.getPlayer().getName())) {
-            event.setTo(event.getFrom());
+    public void onPlayerMove(PlayerMoveEvent e) {
+        Player p = e.getPlayer();
+        if (frozenPlayers.contains(p.getName())) {
+            e.setTo(e.getFrom());
         }
     }
 
     @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        ItemStack item = event.getItem();
-
-        if (item == null) return;
-
-        if (!item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) return;
-
-        String itemName = item.getItemMeta().getDisplayName();
-        Action action = event.getAction();
-
-        if (item.getType() == Material.BOW) {
+    public void onPlayerInteract(PlayerInteractEvent e) {
+        Player p = e.getPlayer();
+        ItemStack i = e.getItem();
+        if (i == null) return;
+        if (!i.hasItemMeta() || !i.getItemMeta().hasDisplayName()) return;
+        String itemName = i.getItemMeta().getDisplayName();
+        Action action = e.getAction();
+        if (i.getType() == Material.BOW) {
             if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
-                launchPlayer(player, 1.2);
+                launchPlayer(p, 1.2);
             }
         }
-
-        if (item.getType() == Material.FEATHER) {
-            if (ChatColor.stripColor(itemName).equalsIgnoreCase(ChatColor.stripColor(VandalName))) {
+        if (i.getType() == Material.FEATHER) {
+            if (itemName.equalsIgnoreCase(VandalName)) {
                 if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
-                    if (!canShoot(player)) {
+                    if (!canShoot(p)) {
                         return;
                     }
-                    shoot(player);
-                    event.setCancelled(true);
+                    shoot(p);
+                    e.setCancelled(true);
                     return;
                 }
             }
-
-            if (ChatColor.stripColor(itemName).equalsIgnoreCase(ChatColor.stripColor(FeatherName))) {
+            if (itemName.equalsIgnoreCase(FeatherName)) {
                 if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
-                    launchPlayer(player, 2.5);
+                    launchPlayer(p, 2.5);
                 }
             }
         }
-
     }
 
-    public static boolean canShoot(Player player) {
+    public static boolean canShoot(Player p) {
         long now = System.currentTimeMillis();
-        long lastShot = shootCooldown.getOrDefault(player.getUniqueId(), 0L);
-
-        if (now - lastShot < SHOOT_COOLDOWN_MS) {
+        long last = shootCooldown.getOrDefault(p.getUniqueId(), 0L);
+        if (now - last < SHOOT_COOLDOWN_MS) {
             return false;
         }
-
-        shootCooldown.put(player.getUniqueId(), now);
+        shootCooldown.put(p.getUniqueId(), now);
         return true;
     }
 
     @EventHandler
-    public void onProjectileHit(ProjectileHitEvent event) {
-        if (!(event.getEntity() instanceof Snowball snowball)) return;
-        if (!(snowball.getShooter() instanceof Player player)) return;
-        if (!"GunBullet".equals(snowball.getCustomName())) return;
-
-        Entity hit = event.getHitEntity();
+    public void onProjectileHit(ProjectileHitEvent e) {
+        if (!(e.getEntity() instanceof Snowball s)) return;
+        if (!(s.getShooter() instanceof Player p)) return;
+        if (!"GunBullet".equals(s.getCustomName())) return;
+        Entity hit = e.getHitEntity();
         if (hit == null) return;
-
         if (hit instanceof EnderDragonPart part) {
-            EnderDragon dragon = (EnderDragon) part.getParent();
-            dragon.damage(40.0, player);
+            EnderDragon dragon = part.getParent();
+            dragon.damage(40.0, p);
             return;
         }
-
         if (hit instanceof EnderCrystal crystal) {
             crystal.getWorld().createExplosion(crystal.getLocation(), 6F);
             crystal.remove();
             return;
         }
-
         if (hit instanceof LivingEntity target) {
-            double hitY = snowball.getLocation().getY();
+            double hitY = s.getLocation().getY();
             double targetY = target.getLocation().getY();
             double targetHeight = target.getHeight();
             double relativeY = hitY - targetY;
-
             boolean isHeadshot = relativeY > targetHeight * 0.70;
             double damage = isHeadshot ? 40 : 10;
-
-            target.damage(damage, player);
+            target.damage(damage, p);
             target.setNoDamageTicks(0);
             target.getWorld().spawnParticle(Particle.CRIT, target.getLocation().add(0, targetHeight / 2, 0), 10, 0.1, 0.1, 0.1, 0.1);
-
             if (isHeadshot) {
-                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1f, 2f);
+                p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1f, 2f);
             } else {
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 1f, 1.1f);
-                player.playSound(player.getLocation(), Sound.BLOCK_STONE_BREAK, 1f, 1.1f);
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 1f, 1.1f);
+                p.playSound(p.getLocation(), Sound.BLOCK_STONE_BREAK, 1f, 1.1f);
             }
-
             return;
         }
-
         if (hit instanceof Damageable damageable) {
-            damageable.damage(999.0, player);
+            damageable.damage(999.0, p);
         }
     }
 
     @EventHandler
-    public void onSnowballDamage(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Snowball snowball && "GunBullet".equals(snowball.getCustomName())) {
-            event.setCancelled(true);
+    public void onSnowballDamage(EntityDamageByEntityEvent e) {
+        if (e.getDamager() instanceof Snowball snowball && "GunBullet".equals(snowball.getCustomName())) {
+            e.setCancelled(true);
         }
     }
 
-    private void launchPlayer(Player player, double power) {
-        Location loc = player.getLocation();
+    private void launchPlayer(Player p, double power) {
+        Location loc = p.getLocation();
         float yaw = loc.getYaw();
         float pitch = loc.getPitch();
         Vector direction = new Vector(
@@ -226,19 +207,17 @@ public class GameListener implements Listener {
                 -Math.sin(Math.toRadians(pitch)),
                 Math.cos(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch))
         );
-        player.setVelocity(direction.multiply(power));
-        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1f, 1.2f);
-        player.getWorld().playEffect(player.getLocation(), Effect.SMOKE, 0);
+        p.setVelocity(direction.multiply(power));
+        p.playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1f, 1.2f);
+        p.getWorld().playEffect(p.getLocation(), Effect.SMOKE, 0);
     }
 
     @EventHandler
     public void onAnvilUse(PrepareAnvilEvent e) {
         ItemStack result = e.getResult();
         if (result == null) return;
-
         ItemMeta meta = result.getItemMeta();
         if (meta == null) return;
-
         Component displayName = meta.displayName();
         if (displayName != null) {
             displayName = displayName.decoration(TextDecoration.ITALIC, false);
@@ -250,62 +229,58 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent e) {
-        Player player = e.getEntity();
-        if (killStreaks.containsKey(player.getUniqueId())) {
-            killStreaks.remove(player.getUniqueId());
+        Player p = e.getEntity();
+        if (killStreaks.containsKey(p.getUniqueId())) {
+            killStreaks.remove(p.getUniqueId());
         }
-        EntityDamageEvent lastDamageCause = player.getLastDamageCause();
+        EntityDamageEvent lastDamageCause = p.getLastDamageCause();
         Entity killer = (lastDamageCause instanceof EntityDamageByEntityEvent) ? ((EntityDamageByEntityEvent) lastDamageCause).getDamager() : null;
-
         if (killer instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) {
             killer = shooter;
         }
-
-        String playerPrefix = getPlayerPrefix(player);
+        String playerPrefix = getPlayerPrefix(p);
         Component dm;
-
-        if (killer instanceof Player playerKiller) {
-            String bPrefix = getPlayerPrefix(playerKiller);
-            ItemStack weapon = playerKiller.getInventory().getItemInMainHand();
-            String weaponName = TranslationUtil.getCustomTranslatedItemName(weapon);
+        if (killer instanceof Player k) {
+            String bPrefix = getPlayerPrefix(k);
+            ItemStack weapon = k.getInventory().getItemInMainHand();
+            String name = TranslationUtil.getCustomTranslatedItemName(weapon);
             NamedTextColor weaponColor = NamedTextColor.WHITE;
             if (weapon.hasItemMeta() && Objects.requireNonNull(weapon.getItemMeta()).hasDisplayName()) {
                 weaponColor = NamedTextColor.WHITE;
             }
             dm = Component.text("§4死亡", NamedTextColor.DARK_RED)
                     .append(Component.text(" §7» ", NamedTextColor.GRAY))
-                    .append(Component.text(playerPrefix + player.getDisplayName(), NamedTextColor.WHITE))
+                    .append(Component.text(playerPrefix + p.getDisplayName(), NamedTextColor.WHITE))
                     .append(Component.text(" §f被 ", NamedTextColor.WHITE))
-                    .append(Component.text(bPrefix + playerKiller.getDisplayName(), NamedTextColor.WHITE))
-                    .append(weaponName.isEmpty() ?
-                        Component.text(" §f殺死了", NamedTextColor.WHITE) :
-                        Component.text(" §f用 ", NamedTextColor.WHITE)
-                            .append(Component.text(weaponName, weaponColor))
-                            .append(Component.text(" §f殺死了", NamedTextColor.WHITE))
+                    .append(Component.text(bPrefix + k.getDisplayName(), NamedTextColor.WHITE))
+                    .append(name.isEmpty() ?
+                            Component.text(" §f殺死了", NamedTextColor.WHITE) :
+                            Component.text(" §f用 ", NamedTextColor.WHITE)
+                                    .append(Component.text(name, weaponColor))
+                                    .append(Component.text(" §f殺死了", NamedTextColor.WHITE))
                     );
         } else if (killer != null) {
             dm = Component.text("§4死亡", NamedTextColor.DARK_RED)
                     .append(Component.text(" §7» ", NamedTextColor.GRAY))
-                    .append(Component.text(playerPrefix + player.getDisplayName(), NamedTextColor.WHITE))
+                    .append(Component.text(playerPrefix + p.getDisplayName(), NamedTextColor.WHITE))
                     .append(Component.text(" §f被 ", NamedTextColor.WHITE))
                     .append(Component.text(TranslationUtil.getCustomTranslatedEntityName(killer), NamedTextColor.GRAY))
                     .append(Component.text(" §f殺死了", NamedTextColor.WHITE));
         } else {
             dm = Component.text((lastDamageCause != null) ?
-                    getDeathMessageByCause(playerPrefix, player.getDisplayName(), lastDamageCause.getCause()) :
-                    "§4死亡 §7» " + playerPrefix + player.getDisplayName() + " §f死亡", NamedTextColor.WHITE);
+                    getDeathMessageByCause(playerPrefix, p.getDisplayName(), lastDamageCause.getCause()) :
+                    "§4死亡 §7» " + playerPrefix + p.getDisplayName() + " §f死亡", NamedTextColor.WHITE);
         }
-        Location loc = player.getLocation().clone();
-        deathLocation.put(player.getUniqueId(), loc);
-
+        Location loc = p.getLocation().clone();
+        deathLocation.put(p.getUniqueId(), loc);
         e.deathMessage(dm);
     }
 
     @EventHandler
-    public void onPlayerKill(PlayerDeathEvent event) {
-        Player killer = event.getEntity().getKiller();
+    public void onPlayerKill(PlayerDeathEvent e) {
+        Player killer = e.getEntity().getKiller();
         if (killer != null && killer.hasPermission("useful.killeffect")) {
-            killer.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, event.getEntity().getLocation(), 50, 0.5, 1, 0.5, 0.1);
+            killer.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, e.getEntity().getLocation(), 50, 0.5, 1, 0.5, 0.1);
             UUID killerId = killer.getUniqueId();
             int kills = killStreaks.getOrDefault(killerId, 0) + 1;
             killStreaks.put(killerId, kills);
@@ -314,27 +289,11 @@ public class GameListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
-        String prefix = getPlayerPrefix(player);
-        String suffix = getPlayerSuffix(player);
-        String message = ChatColor.translateAlternateColorCodes('&',ChatColor.DARK_GRAY + "[" + ChatColor.RED + "-" + ChatColor.DARK_GRAY + "] " + prefix + player.getDisplayName() + suffix);
-        event.setQuitMessage(message);
-    }
-
-    private void sendActionBar(final Player player, final String message, final double duration) {
-        (new BukkitRunnable() {
-            double count = 0;
-            final double maxCount = duration * 20 / 10;
-
-            public void run() {
-                if (this.count < this.maxCount && player.isOnline()) {
-                    player.sendActionBar(Component.text(message));
-                    ++this.count;
-                } else {
-                    this.cancel();
-                }
-            }
-        }).runTaskTimer(Main.getInstance(), 0L, 10L);
+    public void onPlayerQuit(PlayerQuitEvent e) {
+        Player p = e.getPlayer();
+        String prefix = getPlayerPrefix(p);
+        String suffix = getPlayerSuffix(p);
+        String name = p.getDisplayName();
+        e.setQuitMessage("§8[§d+§8] " + prefix + name + suffix);
     }
 }

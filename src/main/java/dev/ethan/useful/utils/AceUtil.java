@@ -1,15 +1,12 @@
 package dev.ethan.useful.utils;
 
 import dev.ethan.useful.Main;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 import static org.bukkit.Bukkit.getServer;
 
-public class ValorantAceUtils {
+public class AceUtil {
     public static void playKillSound(Player killer, int killCount) {
         Sound track01 = Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
         Sound track02 = Sound.BLOCK_NOTE_BLOCK_CHIME;
@@ -21,51 +18,47 @@ public class ValorantAceUtils {
                 killer.playSound(killer.getLocation(), track02, 2.0f, 0.890899f);
                 killer.playSound(killer.getLocation(), track03, 2.0f, 0.890899f);
                 killer.playSound(killer.getLocation(), track04, 2.0f, 0.890899f);
-                sendActionBar(killer, ChatColor.GRAY + "» " + ChatColor.WHITE + "SINGLE KILL" + ChatColor.GRAY + " «");
+                sendActionBar(killer, "§8» " + "§fSINGLE KILL" + " §8«");
                 break;
             case 2:
                 killer.playSound(killer.getLocation(), track01, 2.0f, 1.0f);
                 killer.playSound(killer.getLocation(), track02, 2.0f, 1.0f);
                 killer.playSound(killer.getLocation(), track03, 2.0f, 1.0f);
                 killer.playSound(killer.getLocation(), track04, 2.0f, 1.0f);
-                sendActionBar(killer, ChatColor.DARK_GREEN + "» " + ChatColor.GREEN + "DOUBLE KILL" + ChatColor.DARK_GREEN + " «");
+                sendActionBar(killer, "§2» " + "§aDOUBLE KILL" + " §2«");
                 break;
             case 3:
                 killer.playSound(killer.getLocation(), track01, 2.0f, 1.059463f);
                 killer.playSound(killer.getLocation(), track02, 2.0f, 1.059463f);
                 killer.playSound(killer.getLocation(), track03, 2.0f, 1.059463f);
                 killer.playSound(killer.getLocation(), track04, 2.0f, 1.059463f);
-                sendActionBar(killer, ChatColor.GOLD + "» " + ChatColor.YELLOW + "TRIPLE KILL" + ChatColor.GOLD + " «");
+                sendActionBar(killer, "§6» " + "§eTRIPLE KILL" + " §6«");
                 break;
             case 4:
                 killer.playSound(killer.getLocation(), track01, 2.0f, 1.189207f);
                 killer.playSound(killer.getLocation(), track02, 2.0f, 1.189207f);
                 killer.playSound(killer.getLocation(), track03, 2.0f, 1.189207f);
                 killer.playSound(killer.getLocation(), track04, 2.0f, 1.189207f);
-                sendActionBar(killer, ChatColor.YELLOW + "» " + ChatColor.GOLD + "QUARDAKILL" + ChatColor.YELLOW + " «");
+                sendActionBar(killer, "§e» " + "§6QUADRAKILL" + " §e«");
                 break;
             case 5:
                 killer.playSound(killer.getLocation(), track01, 2.0f, 0.890899f);
                 killer.playSound(killer.getLocation(), track02, 2.0f, 0.890899f);
                 killer.playSound(killer.getLocation(), track03, 2.0f, 0.890899f);
                 killer.playSound(killer.getLocation(), track04, 2.0f, 0.890899f);
-
-                sendActionBar(killer, ChatColor.DARK_RED + "» " + ChatColor.RED + "PENTAAKILL" + ChatColor.DARK_RED + " «");
-
+                sendActionBar(killer, "§4» " + "§cPENTAKILL" + " §4«");
                 getServer().getScheduler().runTaskLater(Main.getInstance(), () -> {
                     killer.playSound(killer.getLocation(), track01, 2.0f, 0.890899f);
                     killer.playSound(killer.getLocation(), track02, 2.0f, 0.890899f);
                     killer.playSound(killer.getLocation(), track03, 2.0f, 0.890899f);
                     killer.playSound(killer.getLocation(), track04, 2.0f, 0.890899f);
                 }, 6L);
-
                 getServer().getScheduler().runTaskLater(Main.getInstance(), () -> {
                     killer.playSound(killer.getLocation(), track01, 2.0f, 0.890899f);
                     killer.playSound(killer.getLocation(), track02, 2.0f, 0.890899f);
                     killer.playSound(killer.getLocation(), track03, 2.0f, 0.890899f);
                     killer.playSound(killer.getLocation(), track04, 2.0f, 0.890899f);
                 }, 14L);
-
                 getServer().getScheduler().runTaskLater(Main.getInstance(), () -> {
 
                     killer.playSound(killer.getLocation(), track01, 2.0f, 1.059463f);
@@ -81,22 +74,19 @@ public class ValorantAceUtils {
                     killer.playSound(killer.getLocation(), track02, 2.0f, 0.890899f);
                     killer.playSound(killer.getLocation(), track03, 2.0f, 0.890899f);
                     killer.playSound(killer.getLocation(), track04, 2.0f, 0.890899f);
-                    sendActionBar(killer, ChatColor.DARK_PURPLE + "» " + ChatColor.LIGHT_PURPLE + "OVERKILL" + ChatColor.WHITE + " × " + ChatColor.LIGHT_PURPLE + ks + ChatColor.DARK_PURPLE + " «");
-
+                    sendActionBar(killer, "§5» " + "§dOVERKILL" + " §f× §d" + ks + " §5«");
                     getServer().getScheduler().runTaskLater(Main.getInstance(), () -> {
                         killer.playSound(killer.getLocation(), track01, 2.0f, 0.890899f);
                         killer.playSound(killer.getLocation(), track02, 2.0f, 0.890899f);
                         killer.playSound(killer.getLocation(), track03, 2.0f, 0.890899f);
                         killer.playSound(killer.getLocation(), track04, 2.0f, 0.890899f);
                     }, 6L);
-
                     getServer().getScheduler().runTaskLater(Main.getInstance(), () -> {
                         killer.playSound(killer.getLocation(), track01, 2.0f, 0.890899f);
                         killer.playSound(killer.getLocation(), track02, 2.0f, 0.890899f);
                         killer.playSound(killer.getLocation(), track03, 2.0f, 0.890899f);
                         killer.playSound(killer.getLocation(), track04, 2.0f, 0.890899f);
                     }, 14L);
-
                     getServer().getScheduler().runTaskLater(Main.getInstance(), () -> {
                         killer.playSound(killer.getLocation(), track01, 2.0f, 1.059463f);
                         killer.playSound(killer.getLocation(), track02, 2.0f, 1.059463f);
@@ -108,7 +98,7 @@ public class ValorantAceUtils {
         }
     }
 
-    public static void sendActionBar(Player player, String message) {
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+    public static void sendActionBar(Player p, String msg) {
+        p.sendActionBar(msg);
     }
 }

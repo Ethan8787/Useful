@@ -11,7 +11,7 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPl
 
 import java.util.Collections;
 
-public class CrasherUtils {
+public class CrashUtil {
     public static double d() {
         double x = Math.random();
         return Double.MAX_VALUE * ((x * (((Math.sqrt(x) * 564 % 1) * 0.75) - (Math.pow(x, 2) % 1) * 0.5)) + 0.5);

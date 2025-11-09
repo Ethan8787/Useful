@@ -1,12 +1,9 @@
 package dev.ethan.useful.handlers;
 
-
 import dev.ethan.useful.Main;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class ConfigHandler {
-
     public ConfigHandler(JavaPlugin plugin) {
         plugin.saveDefaultConfig();
     }
@@ -33,10 +30,6 @@ public class ConfigHandler {
 
     public int getPoolSize() {
         return Main.getInstance().getConfig().getInt("mysql.pool-size", 10);
-    }
-
-    public FileConfiguration getConfig() {
-        return Main.getInstance().getConfig();
     }
 }
 
