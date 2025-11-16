@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import static org.bukkit.Bukkit.getServer;
 
 public class AceUtil {
-    public static void playKillSound(Player killer, int killCount) {
+    public void playKillSound(Player killer, int killCount) {
         Sound track01 = Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
         Sound track02 = Sound.BLOCK_NOTE_BLOCK_CHIME;
         Sound track03 = Sound.BLOCK_NOTE_BLOCK_BELL;
@@ -98,7 +98,7 @@ public class AceUtil {
         }
     }
 
-    public static void sendActionBar(Player p, String msg) {
+    public void sendActionBar(Player p, String msg) {
         p.sendActionBar(msg);
     }
 }

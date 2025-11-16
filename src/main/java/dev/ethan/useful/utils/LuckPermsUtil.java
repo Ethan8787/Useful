@@ -10,55 +10,52 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import static dev.ethan.useful.Main.luckPerms;
-
 public class LuckPermsUtil {
-    public static void init(JavaPlugin plugin) {
-        RegisteredServiceProvider<LuckPerms> provider = plugin.getServer().getServicesManager().getRegistration(LuckPerms.class);
-        if (provider != null) {
-            luckPerms = provider.getProvider();
+    private final LuckPerms luckPerms;
+
+    public LuckPermsUtil(JavaPlugin plugin) {
+        RegisteredServiceProvider<LuckPerms> provider =
+                plugin.getServer().getServicesManager().getRegistration(LuckPerms.class);
+        if (provider == null) {
+            plugin.getLogger().severe("LuckPerms not found! Prefix/suffix will not work.");
+            this.luckPerms = null;
+        } else {
+            this.luckPerms = provider.getProvider();
         }
     }
 
-    public static String getPlayerPrefix(Player p) {
-        UserManager manager = luckPerms.getUserManager();
-        User u = manager.getUser(p.getUniqueId());
-        if (u != null) {
-            CachedMetaData data = u.getCachedData().getMetaData();
-            String prefix = data.getPrefix();
-            return prefix != null ? ChatColor.translateAlternateColorCodes('&', prefix) : "";
-        }
-        return "";
+    public String getPlayerPrefix(Player p) {
+        if (luckPerms == null) return "";
+        User u = luckPerms.getUserManager().getUser(p.getUniqueId());
+        if (u == null) return "";
+        CachedMetaData meta = u.getCachedData().getMetaData();
+        String prefix = meta.getPrefix();
+        return prefix != null ? ChatColor.translateAlternateColorCodes('&', prefix) : "";
     }
 
-    public static String getPlayerPrefix(OfflinePlayer offlinePlayer) {
+    public String getPlayerPrefix(OfflinePlayer offline) {
+        if (luckPerms == null) return "";
         UserManager manager = luckPerms.getUserManager();
-        User u = manager.getUser(offlinePlayer.getUniqueId());
-        if (u == null) {
-            try {
-                u = manager.loadUser(offlinePlayer.getUniqueId()).get();
-            } catch (Exception e) {
-                e.printStackTrace();
-                return "";
+        User u = manager.getUser(offline.getUniqueId());
+        try {
+            if (u == null) {
+                u = manager.loadUser(offline.getUniqueId()).get();
             }
+        } catch (Exception e) {
+            return "";
         }
-        if (u != null) {
-            CachedMetaData data = u.getCachedData().getMetaData();
-            String prefix = data.getPrefix();
-            return prefix != null ? ChatColor.translateAlternateColorCodes('&', prefix) : "";
-        }
-        return "";
+        if (u == null) return "";
+        CachedMetaData meta = u.getCachedData().getMetaData();
+        String prefix = meta.getPrefix();
+        return prefix != null ? ChatColor.translateAlternateColorCodes('&', prefix) : "";
     }
 
-    public static String getPlayerSuffix(Player p) {
-        UserManager manager = luckPerms.getUserManager();
-        User u = manager.getUser(p.getUniqueId());
-        if (u != null) {
-            CachedMetaData data = u.getCachedData().getMetaData();
-            String suffix = data.getSuffix();
-            return suffix != null ? ChatColor.translateAlternateColorCodes('&', suffix) : "";
-        }
-        return "";
+    public String getPlayerSuffix(Player p) {
+        if (luckPerms == null) return "";
+        User u = luckPerms.getUserManager().getUser(p.getUniqueId());
+        if (u == null) return "";
+        CachedMetaData meta = u.getCachedData().getMetaData();
+        String suffix = meta.getSuffix();
+        return suffix != null ? ChatColor.translateAlternateColorCodes('&', suffix) : "";
     }
-
 }

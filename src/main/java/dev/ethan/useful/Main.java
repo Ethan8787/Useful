@@ -2,63 +2,72 @@ package dev.ethan.useful;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import dev.ethan.useful.commands.GameCommands;
-import dev.ethan.useful.events.GameListener;
-import dev.ethan.useful.handlers.ConfigHandler;
-import dev.ethan.useful.handlers.PlaceHolderHandler;
-import dev.ethan.useful.handlers.PlayerStatusHandler;
+import dev.ethan.useful.constants.Messages;
+import dev.ethan.useful.listeners.GameListener;
+import dev.ethan.useful.managers.PlaceHolderManager;
+import dev.ethan.useful.managers.PlayerStatusManager;
 import dev.ethan.useful.utils.*;
 import dev.iiahmed.disguise.DisguiseManager;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.util.*;
-
 public final class Main extends JavaPlugin {
-    public static Main instance;
-    public static LuckPerms luckPerms;
-    public static NickUtil nickStorage;
-    public static Set<String> frozenPlayers = new HashSet<>();
-    public static String Plugin_Prefix = "§c系統 §7» ";
-    public static HashMap<UUID, UUID> lastMessaged = new HashMap<>();
-    public static File ipsFile;
-    public static FileConfiguration ipsConfig;
-    public static String FeatherName = "§dFeather";
-    public static HashMap<UUID, Integer> killStreaks = new HashMap<>();
-    public static String VandalName = "§dVandal";
-    public static Set<UUID> dmListeners = new HashSet<>();
-    public static File statsFile;
-    public static FileConfiguration statsConfig;
+    private static Main instance;
+    private AceUtil aceUtil;
+    private BotUtil botUtil;
+    private CrashUtil crashUtil;
+    private HomeUtil homeUtil;
+    private IPTrackerUtil ipTrackerUtil;
+    private LuckPermsUtil luckPermsUtil;
+    private MessageUtil messageUtil;
+    private PlayerUtil playerUtil;
+    private SnowballUtil snowballUtil;
+    private TeleportUtil teleportUtil;
+    private TranslationUtil translationUtil;
+    private GameListener gameListener;
+    private NickUtil nickUtil;
+    private PlayerStatusManager playerStatusManager;
+    private PlaceHolderManager placeHolderManager;
+    private LuckPerms luckPerms;
+    public NickUtil nickStorage;
 
     @Override
     public void onEnable() {
         instance = this;
         Player author = Bukkit.getPlayer("27ms__");
-        if (!(author == null)) author.sendMessage(Plugin_Prefix + "§aUseful-5.8.2.jar");
-        TeleportUtil.init(this);
-        MessageUtil.init(this);
-        SnowballUtil.init(this);
-        IPTrackerUtil.init(this);
-        LuckPermsUtil.init(this);
-        PlayerStatusHandler.init(this);
-        PlaceHolderHandler.init(this);
+        if (author != null) {
+            author.sendMessage(Messages.PREFIX + "§aUseful-5.8.2.jar");
+        }
+        teleportUtil = new TeleportUtil(this);
+        messageUtil = new MessageUtil(this);
+        snowballUtil = new SnowballUtil(this);
+        ipTrackerUtil = new IPTrackerUtil(this);
+        luckPermsUtil = new LuckPermsUtil(this);
+        homeUtil = new HomeUtil(this);
+        nickStorage = new NickUtil(this);
+        playerUtil = new PlayerUtil();
+        translationUtil = new TranslationUtil();
+        aceUtil = new AceUtil();
+        botUtil = new BotUtil();
+        crashUtil = new CrashUtil();
+        placeHolderManager = new PlaceHolderManager(this);
         DisguiseManager.initialize(this, true);
         PacketEvents.getAPI().init();
-        ConfigHandler config = new ConfigHandler(this);
-        nickStorage = NickUtil.init(
-                this,
-                config.getHost(),
-                config.getPort(),
-                config.getDatabase(),
-                config.getUsername(),
-                config.getPassword(),
-                config.getPoolSize()
-        );
+        gameListener = new GameListener();
         register();
+        getServer().getPluginManager().registerEvents(gameListener, this);
+        playerStatusManager = new PlayerStatusManager(this);
+    }
+
+    @Override
+    public void onDisable() {
+        teleportUtil.save();
+        if (nickUtil != null) {
+            nickUtil.close();
+        }
     }
 
     @Override
@@ -66,25 +75,19 @@ public final class Main extends JavaPlugin {
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
     }
 
-    @Override
-    public void onDisable() {
-        TeleportUtil.save();
-        NickUtil.close();
-    }
-
     private void register() {
         GameCommands cmd = new GameCommands();
         String[] commands = {
-                "kms","l","heal","boom","gms","gmc","gma","gmsp","sudo","freeze",
-                "unfreeze","feather","nick","unnick","msg","r","w","tell","god","hat",
-                "dupe","ips","alts","gun","botf","bot","removenpc","nuke","explosion",
-                "particle","position","dmlisten","tpa","tpahere","tpaccept","tpdeny",
-                "fly","sethome","homes","home","delhome","block","unblock","uuid","blocklist"
+                "kms", "heal", "boom", "gms", "gmc", "gma", "gmsp", "sudo", "freeze",
+                "unfreeze", "feather", "nick", "unnick", "msg", "r", "w", "tell", "god",
+                "hat", "dupe", "ips", "alts", "gun", "botf", "bot", "removenpc", "nuke",
+                "explosion", "particle", "position", "dmlisten", "tpa", "tpahere", "tpaccept",
+                "tpdeny", "fly", "sethome", "homes", "home", "delhome", "block", "unblock",
+                "uuid", "blocklist", "world"
         };
         for (String s : commands) registerCommand(s, cmd);
-        getServer().getPluginManager().registerEvents(new GameListener(), this);
-        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
     }
+
     private void registerCommand(String name, GameCommands executor) {
         var cmd = getCommand(name);
         if (cmd == null) {
@@ -97,5 +100,73 @@ public final class Main extends JavaPlugin {
 
     public static Main getInstance() {
         return instance;
+    }
+
+    public AceUtil getAceUtil() {
+        return aceUtil;
+    }
+
+    public BotUtil getBotUtil() {
+        return botUtil;
+    }
+
+    public CrashUtil getCrashUtil() {
+        return crashUtil;
+    }
+
+    public HomeUtil getHomeUtil() {
+        return homeUtil;
+    }
+
+    public IPTrackerUtil getIPTrackerUtil() {
+        return ipTrackerUtil;
+    }
+
+    public LuckPermsUtil getLuckPermsUtil() {
+        return luckPermsUtil;
+    }
+
+    public MessageUtil getMessageUtil() {
+        return messageUtil;
+    }
+
+    public PlayerUtil getPlayerUtil() {
+        return playerUtil;
+    }
+
+    public SnowballUtil getSnowballUtil() {
+        return snowballUtil;
+    }
+
+    public PlaceHolderManager getPlaceHolderManager() {
+        return placeHolderManager;
+    }
+
+    public PlayerStatusManager getPlayerStatusManager() {
+        return playerStatusManager;
+    }
+
+    public TeleportUtil getTeleportUtil() {
+        return teleportUtil;
+    }
+
+    public GameListener getGameListener() {
+        return gameListener;
+    }
+
+    public TranslationUtil getTranslationUtil() {
+        return translationUtil;
+    }
+
+    public NickUtil getNickUtil(){
+        return nickUtil;
+    }
+
+    public LuckPerms getLuckPerms() {
+        return luckPerms;
+    }
+
+    public static NickUtil nick() {
+        return instance.nickStorage;
     }
 }

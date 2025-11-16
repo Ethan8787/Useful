@@ -18,9 +18,6 @@ commands:
     usage: /<command>
     permission: useful.default
     permission-message: Unknown command. Type \"/help\" for help.
-  l:
-    description: Lobby
-    usage: /<command>
   heal:
     description: Heal yourself
     usage: /<command>
@@ -84,23 +81,15 @@ commands:
   msg:
     description: Send direct message to a player
     usage: /msg <player> <msg>
-    permission: useful.default
-    permission-message: Unknown command. Type "/help" for help.
   r:
     description: Reply a direct message from a player
     usage: /r <msg>
-    permission: useful.default
-    permission-message: Unknown command. Type "/help" for help.
   w:
     description: Send direct message to a player
     usage: /w <player> <msg>
-    permission: useful.default
-    permission-message: Unknown command. Type "/help" for help.
   tell:
     description: Send direct message to a player
     usage: /tell <player> <msg>
-    permission: useful.default
-    permission-message: Unknown command. Type "/help" for help.
   god:
     description: Enable god mode for a player
     usage: /god
@@ -109,8 +98,6 @@ commands:
   hat:
     description: Equip the item in your hand to your helmet slot
     usage: /hat
-    permission: useful.default
-    permission-message: Unknown command. Type "/help" for help.
   dupe:
     description: Duplicate iten in hand
     usage: /dupe
@@ -143,7 +130,7 @@ commands:
     permission-message: Unknown command. Type "/help" for help.
   removenpc:
     description: Despawn all NPC that you spawned
-    usage: /removenpc <name>
+    usage: /removenpc
     permission: useful.admin
     permission-message: Unknown command. Type "/help" for help.
   nuke:
@@ -174,15 +161,23 @@ commands:
   tpa:
     description: Request to teleport to another player.
     usage: /tpa <player>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
   tpahere:
     description: Request another player to teleport to you.
     usage: /tpahere <player|all>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
   tpaccept:
     description: Accept a teleport request.
     usage: /tpaccept
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
   tpdeny:
     description: Deny a teleport request.
     usage: /tpdeny
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
   fly:
     description: Enable fly for a player
     usage: /fly
@@ -191,9 +186,13 @@ commands:
   sethome:
     description: Set a home.
     usage: /sethome <name>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
   homes:
     description: List your homes.
     usage: /homes
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
   block:
     description: Block a player
     usage: /block <player>
@@ -211,15 +210,27 @@ commands:
   home:
     description: Teleport to a home.
     usage: /home <name>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
   delhome:
     description: Delete a home.
     usage: /delhome <name>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  world:
+    description: Teleports to a world
+    usage: /world <world>
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
 permissions:
   useful.default:
     description: Default perms
     default: true
   useful.vip:
     description: VIP perms
+    default: op
+  useful.vipplus:
+    description: VIP+ perms
     default: op
   useful.admin:
     description: Admin perms

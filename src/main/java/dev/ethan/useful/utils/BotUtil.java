@@ -15,7 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class BotUtil {
-    public static void spawnFakePlayer(JavaPlugin plugin, Location loc, String name, Player p) {
+    public void spawnFakePlayer(JavaPlugin plugin, Location loc, String name, Player p) {
         NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, name);
         npc.spawn(loc);
         npc.setName(name);
@@ -58,7 +58,7 @@ public class BotUtil {
         }.runTaskTimer(plugin, 0L, 10L);
     }
 
-    public static void spawnBot(Location loc, String name) {
+    public void spawnBot(Location loc, String name) {
         NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, name);
         npc.spawn(loc);
         npc.setName(name);
@@ -72,7 +72,7 @@ public class BotUtil {
 
     }
 
-    public static void removeAllNPCs() {
+    public void removeAllNPCs() {
         for (NPC npc : CitizensAPI.getNPCRegistry()) {
             if (npc.isSpawned()) {
                 npc.despawn();

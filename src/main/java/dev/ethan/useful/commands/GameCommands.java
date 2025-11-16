@@ -3,9 +3,12 @@ package dev.ethan.useful.commands;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.protocol.player.User;
 import dev.ethan.useful.Main;
+import dev.ethan.useful.constants.Messages;
+import dev.ethan.useful.listeners.GameListener;
 import dev.ethan.useful.utils.*;
 import dev.iiahmed.disguise.Disguise;
 import dev.iiahmed.disguise.DisguiseManager;
+import dev.iiahmed.disguise.DisguiseProvider;
 import dev.iiahmed.disguise.SkinAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -32,15 +35,20 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-import static dev.ethan.useful.Main.*;
-import static dev.ethan.useful.utils.CrashUtil.*;
-import static dev.ethan.useful.utils.LuckPermsUtil.getPlayerPrefix;
-
 public class GameCommands implements CommandExecutor, TabCompleter {
+    private final TeleportUtil teleportUtil = Main.getInstance().getTeleportUtil();
+    private final HomeUtil homeUtil = Main.getInstance().getHomeUtil();
+    private final BotUtil botUtil = Main.getInstance().getBotUtil();
+    private final LuckPermsUtil luckPermsUtil = Main.getInstance().getLuckPermsUtil();
+    private final CrashUtil crashUtil = Main.getInstance().getCrashUtil();
+    private final IPTrackerUtil ipTrackerUtil = Main.getInstance().getIPTrackerUtil();
+    private final PlayerUtil playerUtil = Main.getInstance().getPlayerUtil();
+    private final GameListener gameListener = Main.getInstance().getGameListener();
+    private final MessageUtil messageUtil = Main.getInstance().getMessageUtil();
+
     @Override
     public boolean onCommand(@NotNull CommandSender s, @NotNull Command cmd, @NotNull String label, String[] args) {
         if (!(s instanceof Player p)) return true;
-
         switch (cmd.getName().toLowerCase()) {
             case "kms" -> handleKms(p);
             case "heal" -> handleHeal(p, args);
@@ -54,7 +62,6 @@ public class GameCommands implements CommandExecutor, TabCompleter {
             case "gun" -> handleGun(p);
             case "hat" -> handleHat(p);
             case "dupe" -> handleDupe(p);
-            case "l" -> handleLobby(p, args);
             case "sudo" -> handleSudo(s, args);
             case "nick" -> handleNick(p, args);
             case "unnick" -> handleUnnick(p);
@@ -64,7 +71,7 @@ public class GameCommands implements CommandExecutor, TabCompleter {
             case "alts" -> handleAlts(s, args);
             case "bot" -> handleBot(p, args);
             case "botf" -> handleBotFollow(p, args);
-            case "removenpc" -> BotUtil.removeAllNPCs();
+            case "removenpc" -> botUtil.removeAllNPCs();
             case "r" -> handleReply(p, args);
             case "msg", "w", "tell" -> handleMessage(p, label, args);
             case "dmlisten" -> handleDmToggle(p);
@@ -72,18 +79,19 @@ public class GameCommands implements CommandExecutor, TabCompleter {
             case "particle" -> handleParticle(s, args);
             case "position" -> handlePosition(s, args);
             case "nuke" -> handleNuke(s, args);
-            case "sethome" -> HomeUtil.handleSetHome(p, args);
-            case "homes" -> HomeUtil.handleHomes(p);
-            case "home" -> HomeUtil.handleHome(p, args);
-            case "delhome" -> HomeUtil.handleDelHome(p, args);
-            case "tpa" -> TeleportUtil.handleTpaCommand(p, args);
-            case "tpahere" -> TeleportUtil.handleTpahereCommand(p, args);
-            case "tpaccept" -> TeleportUtil.handleTpacceptCommand(p, args);
-            case "tpdeny" -> TeleportUtil.handleTpdenyCommand(p, args);
-            case "block" -> TeleportUtil.handleBlockCommand(p, args);
-            case "unblock" -> TeleportUtil.handleUnblockCommand(p, args);
-            case "blocklist" -> TeleportUtil.handleBlockListCommand(p);
+            case "sethome" -> homeUtil.handleSetHome(p, args);
+            case "homes" -> homeUtil.handleHomes(p);
+            case "home" -> homeUtil.handleHome(p, args);
+            case "delhome" -> homeUtil.handleDelHome(p, args);
+            case "tpa" -> teleportUtil.handleTpaCommand(p, args);
+            case "tpahere" -> teleportUtil.handleTpahereCommand(p, args);
+            case "tpaccept" -> teleportUtil.handleTpacceptCommand(p, args);
+            case "tpdeny" -> teleportUtil.handleTpdenyCommand(p, args);
+            case "block" -> teleportUtil.handleBlockCommand(p, args);
+            case "unblock" -> teleportUtil.handleUnblockCommand(p, args);
+            case "blocklist" -> teleportUtil.handleBlockListCommand(p);
             case "uuid" -> handleUUID(p, args);
+            case "world" -> handleWorld(p, args);
             default -> {
                 return false;
             }
@@ -100,7 +108,7 @@ public class GameCommands implements CommandExecutor, TabCompleter {
             if (!p.hasPermission("useful.heal")) return;
             p.setHealth(20);
             p.setFoodLevel(20);
-            p.sendMessage(Plugin_Prefix + "§d已治癒");
+            p.sendMessage(Messages.PREFIX + "§d已治癒");
             p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
             return;
         }
@@ -108,7 +116,7 @@ public class GameCommands implements CommandExecutor, TabCompleter {
             double value = Double.parseDouble(args[0]);
             if (p.hasPermission("useful.heal.amount")) {
                 p.setHealth(value);
-                p.sendMessage(Plugin_Prefix + "§d已設定生命值為 " + value);
+                p.sendMessage(Messages.PREFIX + "§d已設定生命值為 " + value);
                 return;
             }
         } catch (NumberFormatException ignored) {
@@ -116,60 +124,60 @@ public class GameCommands implements CommandExecutor, TabCompleter {
         if (p.hasPermission("useful.heal.others")) {
             Player t = Bukkit.getPlayer(args[0]);
             if (t == null) {
-                p.sendMessage(Plugin_Prefix + "§c玩家不存在或離線");
+                p.sendMessage(Messages.PREFIX + "§c玩家不存在或離線");
                 return;
             }
             t.setHealth(Objects.requireNonNull(t.getAttribute(Attribute.MAX_HEALTH)).getValue());
             t.setFoodLevel(20);
-            t.sendMessage(Plugin_Prefix + "§d你被 " + getPlayerPrefix(p) + p.getName() + " §d治癒了");
-            p.sendMessage(Plugin_Prefix + "§d你治癒了 " + getPlayerPrefix(t) + t.getName());
-        } else p.sendMessage(Plugin_Prefix + "§c用法: /heal <玩家名稱|血量>");
+            t.sendMessage(Messages.PREFIX + "§d你被 " + luckPermsUtil.getPlayerPrefix(p) + p.getName() + " §d治癒了");
+            p.sendMessage(Messages.PREFIX + "§d你治癒了 " + luckPermsUtil.getPlayerPrefix(t) + t.getName());
+        } else p.sendMessage(Messages.PREFIX + "§c用法: /heal <玩家名稱|血量>");
     }
 
     private void handleGamemode(Player p, GameMode mode, String[] args) {
         if (args.length == 0) {
             p.setGameMode(mode);
-            p.sendMessage(Plugin_Prefix + "§f您的遊戲模式已更新");
+            p.sendMessage(Messages.PREFIX + "§f您的遊戲模式已更新");
             return;
         }
         Player target = Bukkit.getPlayer(args[0]);
         if (target == null) {
-            p.sendMessage(Plugin_Prefix + "§c玩家不存在");
+            p.sendMessage(Messages.PREFIX + "§c玩家不存在");
             return;
         }
         target.setGameMode(mode);
-        p.sendMessage(Plugin_Prefix + "§f已更新 " + getPlayerPrefix(target) + target.getName() + " §f的遊戲模式");
+        p.sendMessage(Messages.PREFIX + "§f已更新 " + luckPermsUtil.getPlayerPrefix(target) + target.getName() + " §f的遊戲模式");
     }
 
     private void handleGod(Player p, String[] args) {
         if (args.length == 0) {
             if (!p.hasPermission("useful.god")) return;
             p.setInvulnerable(!p.isInvulnerable());
-            p.sendMessage(Plugin_Prefix + "§f無敵狀態 " + (p.isInvulnerable() ? "§aOn" : "§cOff"));
+            p.sendMessage(Messages.PREFIX + "§f無敵狀態 " + (p.isInvulnerable() ? "§aOn" : "§cOff"));
             return;
         }
         Player t = Bukkit.getPlayer(args[0]);
         if (t == null) {
-            p.sendMessage(Plugin_Prefix + "§c玩家不存在");
+            p.sendMessage(Messages.PREFIX + "§c玩家不存在");
             return;
         }
         t.setInvulnerable(!t.isInvulnerable());
-        p.sendMessage(Plugin_Prefix + getPlayerPrefix(t) + t.getName() + " §f的無敵狀態 " + (t.isInvulnerable() ? "§aOn" : "§cOff"));
-        t.sendMessage(Plugin_Prefix + "§f無敵狀態 " + (t.isInvulnerable() ? "§aOn" : "§cOff"));
+        p.sendMessage(Messages.PREFIX + luckPermsUtil.getPlayerPrefix(t) + t.getName() + " §f的無敵狀態 " + (t.isInvulnerable() ? "§aOn" : "§cOff"));
+        t.sendMessage(Messages.PREFIX + "§f無敵狀態 " + (t.isInvulnerable() ? "§aOn" : "§cOff"));
     }
 
     private void handleBoom(Player p, String[] args) {
         if (args.length != 1) {
-            p.sendMessage(Plugin_Prefix + "§c用法: /boom <玩家|all>");
+            p.sendMessage(Messages.PREFIX + "§c用法: /boom <玩家|all>");
             return;
         }
         if (args[0].equalsIgnoreCase("all")) {
             Bukkit.getOnlinePlayers().forEach(player -> launchFirework(p, player));
-            p.sendMessage(Plugin_Prefix + "§a你將所有玩家射向高空");
+            p.sendMessage(Messages.PREFIX + "§a你將所有玩家射向高空");
         } else {
             Player t = Bukkit.getPlayer(args[0]);
             if (t == null) {
-                p.sendMessage(Plugin_Prefix + "§c玩家不存在");
+                p.sendMessage(Messages.PREFIX + "§c玩家不存在");
                 return;
             }
             launchFirework(p, t);
@@ -213,39 +221,39 @@ public class GameCommands implements CommandExecutor, TabCompleter {
                         .setY(Math.max(firework.getVelocity().getY(), 0.5)));
             }
         }.runTaskTimer(Main.getInstance(), 0L, 1L);
-        t.sendMessage(Plugin_Prefix + "§fLaunched by " + getPlayerPrefix(s) + s.getName());
-        s.sendMessage(Plugin_Prefix + "§aFireworks launched for " + getPlayerPrefix(t) + t.getName());
+        t.sendMessage(Messages.PREFIX + "§fLaunched by " + luckPermsUtil.getPlayerPrefix(s) + s.getName());
+        s.sendMessage(Messages.PREFIX + "§aFireworks launched for " + luckPermsUtil.getPlayerPrefix(t) + t.getName());
         s.playSound(s.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
     }
 
     private void handleBotFollow(Player p, String[] args) {
         if (args.length < 2) {
-            p.sendMessage(Plugin_Prefix + "§c用法: /botf <name> <player>");
+            p.sendMessage(Messages.PREFIX + "§c用法: /botf <name> <player>");
             return;
         }
         Player toFollow = Bukkit.getPlayer(args[1]);
         if (toFollow == null) {
-            p.sendMessage(Plugin_Prefix + "§c找不到玩家 " + args[1]);
+            p.sendMessage(Messages.PREFIX + "§c找不到玩家 " + args[1]);
             return;
         }
-        p.sendMessage(Plugin_Prefix + "§a已生成 NPC：" + args[0] + "§a，跟隨 " + toFollow.getName());
-        BotUtil.spawnFakePlayer(Main.getInstance(), p.getLocation(), args[0], toFollow);
+        p.sendMessage(Messages.PREFIX + "§a已生成 NPC：" + args[0] + "§a，跟隨 " + toFollow.getName());
+        botUtil.spawnFakePlayer(Main.getInstance(), p.getLocation(), args[0], toFollow);
     }
 
     private void handleBot(Player p, String[] args) {
         if (args.length < 1) {
-            p.sendMessage(Plugin_Prefix + "§c用法: /bot <name>");
+            p.sendMessage(Messages.PREFIX + "§c用法: /bot <name>");
             return;
         }
         String botName = args[0];
-        p.sendMessage(Plugin_Prefix + "§a已生成機器人：" + botName);
-        BotUtil.spawnBot(p.getLocation(), botName);
+        p.sendMessage(Messages.PREFIX + "§a已生成機器人：" + botName);
+        botUtil.spawnBot(p.getLocation(), botName);
     }
 
     private void handleDupe(Player p) {
         ItemStack item = p.getInventory().getItemInMainHand();
         if (item.getType() == Material.AIR) {
-            p.sendMessage(Plugin_Prefix + "§c手上沒有物品");
+            p.sendMessage(Messages.PREFIX + "§c手上沒有物品");
             return;
         }
         ItemStack clone = item.clone();
@@ -255,31 +263,31 @@ public class GameCommands implements CommandExecutor, TabCompleter {
     private void handleHat(Player p) {
         ItemStack hand = p.getInventory().getItemInMainHand();
         if (hand.getType() == Material.AIR) {
-            p.sendMessage(Plugin_Prefix + "§c手中物品無效");
+            p.sendMessage(Messages.PREFIX + "§c手中物品無效");
             return;
         }
         ItemStack oldHelmet = p.getInventory().getHelmet();
         p.getInventory().setHelmet(hand);
         p.getInventory().setItemInMainHand(oldHelmet != null ? oldHelmet : new ItemStack(Material.AIR));
-        p.sendMessage(Plugin_Prefix + "§a已將手中物品裝備在頭盔欄位");
+        p.sendMessage(Messages.PREFIX + "§a已將手中物品裝備在頭盔欄位");
     }
 
     private void handleFly(Player p, String[] args) {
         Player t = args.length == 0 ? p : Bukkit.getPlayer(args[0]);
-        if (t == null && p != null) {
-            p.sendMessage(Plugin_Prefix + "§c玩家不存在");
+        if (t == null) {
+            p.sendMessage(Messages.PREFIX + "§c玩家不存在");
             return;
         }
         t.setAllowFlight(!t.getAllowFlight());
-        p.sendMessage(Plugin_Prefix + getPlayerPrefix(t) + t.getName() + " §f的飛行狀態 " + (t.getAllowFlight() ? "§aOn" : "§cOff"));
-        t.sendMessage(Plugin_Prefix + "§f飛行狀態 " + (t.getAllowFlight() ? "§aOn" : "§cOff"));
+        p.sendMessage(Messages.PREFIX + luckPermsUtil.getPlayerPrefix(t) + t.getName() + " §f的飛行狀態 " + (t.getAllowFlight() ? "§aOn" : "§cOff"));
+        t.sendMessage(Messages.PREFIX + "§f飛行狀態 " + (t.getAllowFlight() ? "§aOn" : "§cOff"));
     }
 
     private void handleGun(Player p) {
         ItemStack w = new ItemStack(Material.FEATHER);
         ItemMeta m = w.getItemMeta();
         if (m != null) {
-            m.setDisplayName(ChatColor.RESET + VandalName);
+            m.setDisplayName(ChatColor.RESET + Messages.VANDAL_NAME);
             List<String> l = new ArrayList<>();
             l.add("§7Effective Range: " + "§f80m");
             m.setLore(l);
@@ -298,22 +306,14 @@ public class GameCommands implements CommandExecutor, TabCompleter {
         p.getInventory().addItem(w);
     }
 
-    private void handleLobby(Player p, String[] args) {
-        if (args.length > 0) {
-            p.sendMessage(Plugin_Prefix + "§c用法: /l");
-            return;
-        }
-        PlayerUtil.sendToServer(p, "lobby");
-    }
-
     private void handleSudo(CommandSender s, String[] args) {
         if (args.length < 2) {
-            s.sendMessage(Plugin_Prefix + "§c用法: /sudo <玩家> <指令>");
+            s.sendMessage(Messages.PREFIX + "§c用法: /sudo <玩家> <指令>");
             return;
         }
         Player t = Bukkit.getPlayer(args[0]);
         if (t == null) {
-            s.sendMessage(Plugin_Prefix + "§c玩家不存在");
+            s.sendMessage(Messages.PREFIX + "§c玩家不存在");
             return;
         }
         String msg = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
@@ -323,94 +323,122 @@ public class GameCommands implements CommandExecutor, TabCompleter {
 
     private void handleNick(Player p, String[] args) {
         if (args.length < 1) {
-            p.sendMessage(Plugin_Prefix + "§f用法: /nick <nickname> [--skin]");
+            p.sendMessage(Messages.PREFIX + "§fPlease specify a nickname. Usage: /nick <nickname> [--skin]");
             return;
         }
         String nick = args[0].replace("&", "§");
-        boolean skin = Arrays.asList(args).contains("--skin");
-        nickStorage.setNickname(p, nick);
+        boolean changeSkin = args.length > 1 && (args[1].equalsIgnoreCase("--skin") || (args.length > 2 && args[2].equalsIgnoreCase("--skin")));
+        Main.nick().setNickname(p, nick);
         p.setDisplayName(nick);
         p.setPlayerListName(nick);
-        Disguise.Builder builder = Disguise.builder().setName(nick).setEntityType(EntityType.PLAYER);
-        builder.setSkin(SkinAPI.MOJANG, p.getUniqueId());
-        Disguise d = builder.build();
-        DisguiseManager.getProvider().disguise(p, d);
-        p.sendMessage(Plugin_Prefix + "§fNick set: " + getPlayerPrefix(p) + nick + (skin ? " §7(Skin)" : ""));
+        Disguise.Builder builder = Disguise.builder()
+                .setName(nick)
+                .setEntityType(EntityType.PLAYER);
+        if (changeSkin) {
+            try {
+                UUID skinUUID = playerUtil.getUUID(nick);
+                builder.setSkin(SkinAPI.MOJANG, skinUUID != null ? skinUUID : p.getUniqueId());
+            } catch (Exception e) {
+                builder.setSkin(SkinAPI.MOJANG, p.getUniqueId());
+            }
+        } else {
+            builder.setSkin(SkinAPI.MOJANG, p.getUniqueId());
+        }
+        try {
+            Disguise disguise = builder.build();
+            DisguiseProvider provider = DisguiseManager.getProvider();
+            provider.disguise(p, disguise);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        p.sendMessage(Messages.PREFIX + "§fNick set: " + luckPermsUtil.getPlayerPrefix(p) + nick + (changeSkin ? " §7(Skin)" : ""));
     }
 
     private void handleUnnick(Player p) {
-        if (nickStorage.getNickname(p) == null) {
-            p.sendMessage(Plugin_Prefix + "§fYou are not nicked.");
+        String currentNick = Main.nick().getNickname(p);
+        if (currentNick == null) {
+            p.sendMessage(Messages.PREFIX + "§fYou are not nicked.");
             return;
         }
-        DisguiseManager.getProvider().undisguise(p);
-        nickStorage.removeNicknameSync(p);
+        DisguiseProvider provider = DisguiseManager.getProvider();
+        provider.undisguise(p);
+        Main.nick().removeNickname(p);
         p.setDisplayName(p.getName());
         p.setPlayerListName(p.getName());
-        p.sendMessage(Plugin_Prefix + "§fUnnicked.");
+        p.sendMessage(Messages.PREFIX + "§fUnnicked.");
     }
 
     private void handleFreeze(CommandSender s, String[] args) {
         if (args.length != 1) {
-            s.sendMessage(Plugin_Prefix + "§c用法: /freeze <玩家>");
+            s.sendMessage(Messages.PREFIX + "§c用法: /freeze <玩家>");
             return;
         }
-        Player target = Bukkit.getPlayer(args[0]);
-        frozenPlayers.add(target.getName());
-        s.sendMessage(Plugin_Prefix + "§c你已凍結" + getPlayerPrefix(target) + target.getName());
-        target.sendMessage(Plugin_Prefix + "§c你已被凍結");
+        Player t = Bukkit.getPlayer(args[0]);
+        if (t != null) {
+            gameListener.freezePlayer(t.getName());
+        } else {
+            s.sendMessage(Messages.PREFIX + "§c目標無效");
+            return;
+        }
+        s.sendMessage(Messages.PREFIX + "§c你已凍結" + luckPermsUtil.getPlayerPrefix(t) + t.getName());
+        t.sendMessage(Messages.PREFIX + "§c你已被凍結");
     }
 
     private void handleUnfreeze(CommandSender s, String[] args) {
         if (args.length != 1) {
-            s.sendMessage(Plugin_Prefix + "§c用法: /unfreeze <玩家>");
+            s.sendMessage(Messages.PREFIX + "§c用法: /unfreeze <玩家>");
             return;
         }
         Player t = Bukkit.getPlayer(args[0]);
-        frozenPlayers.remove(t.getName());
-        s.sendMessage(Plugin_Prefix + "§c你已解凍" + getPlayerPrefix(t) + t.getName());
-        t.sendMessage(Plugin_Prefix + "§a你已被解凍");
+        if (t != null) {
+            gameListener.unfreezePlayer(t.getName());
+        } else {
+            s.sendMessage(Messages.PREFIX + "§c目標無效");
+            return;
+        }
+        s.sendMessage(Messages.PREFIX + "§c你已解凍" + luckPermsUtil.getPlayerPrefix(t) + t.getName());
+        t.sendMessage(Messages.PREFIX + "§a你已被解凍");
     }
 
     private void handleIps(CommandSender s, String[] args) {
         if (!s.hasPermission("useful.ips")) return;
         if (args.length != 1) {
-            s.sendMessage(Plugin_Prefix + "§c用法: /ips <玩家>");
+            s.sendMessage(Messages.PREFIX + "§c用法: /ips <玩家>");
             return;
         }
         String playerName = args[0];
-        if (!ipsConfig.contains(playerName)) {
-            s.sendMessage(Plugin_Prefix + "§c找不到玩家 §f" + playerName + " §c的紀錄");
+        if (!ipTrackerUtil.ipsConfig.contains(playerName)) {
+            s.sendMessage(Messages.PREFIX + "§c找不到玩家 §f" + playerName + " §c的紀錄");
             return;
         }
-        List<String> ipList = ipsConfig.getStringList(playerName);
-        if (ipList == null || ipList.isEmpty()) {
-            s.sendMessage(Plugin_Prefix + "§e玩家 §f" + playerName + " §e沒有任何已記錄的 IP");
+        List<String> ipList = ipTrackerUtil.ipsConfig.getStringList(playerName);
+        if (ipList.isEmpty()) {
+            s.sendMessage(Messages.PREFIX + "§e玩家 §f" + playerName + " §e沒有任何已記錄的 IP");
             return;
         }
-        s.sendMessage(Plugin_Prefix + "§e" + playerName + " 的 IP 列表:");
+        s.sendMessage(Messages.PREFIX + "§e" + playerName + " 的 IP 列表:");
         s.sendMessage("§f" + String.join("§7, §f", ipList));
     }
 
     private void handleAlts(CommandSender s, String[] args) {
         if (!s.hasPermission("useful.alts")) return;
         if (args.length != 1) {
-            s.sendMessage(Plugin_Prefix + "§c用法: /alts <玩家>");
+            s.sendMessage(Messages.PREFIX + "§c用法: /alts <玩家>");
             return;
         }
         String targetName = args[0];
-        if (!ipsConfig.contains(targetName)) {
-            s.sendMessage(Plugin_Prefix + "§c找不到玩家 §f" + targetName + " §c的紀錄");
+        if (!ipTrackerUtil.ipsConfig.contains(targetName)) {
+            s.sendMessage(Messages.PREFIX + "§c找不到玩家 §f" + targetName + " §c的紀錄");
             return;
         }
-        List<String> targetIps = ipsConfig.getStringList(targetName);
+        List<String> targetIps = ipTrackerUtil.ipsConfig.getStringList(targetName);
         if (targetIps.isEmpty()) {
-            s.sendMessage(Plugin_Prefix + "§e玩家 §f" + targetName + " §e沒有任何已記錄的 IP");
+            s.sendMessage(Messages.PREFIX + "§e玩家 §f" + targetName + " §e沒有任何已記錄的 IP");
             return;
         }
         Map<String, Set<String>> ipMap = new HashMap<>();
-        for (String name : ipsConfig.getKeys(false)) {
-            for (String ip : ipsConfig.getStringList(name)) {
+        for (String name : ipTrackerUtil.ipsConfig.getKeys(false)) {
+            for (String ip : ipTrackerUtil.ipsConfig.getStringList(name)) {
                 ipMap.computeIfAbsent(ip, k -> new HashSet<>()).add(name);
             }
         }
@@ -420,20 +448,20 @@ public class GameCommands implements CommandExecutor, TabCompleter {
         }
         alts.remove(targetName);
         if (alts.isEmpty()) {
-            s.sendMessage(Plugin_Prefix + "§a未找到與 §f" + targetName + " §a共用 IP 的其他帳號");
+            s.sendMessage(Messages.PREFIX + "§a未找到與 §f" + targetName + " §a共用 IP 的其他帳號");
         } else {
-            s.sendMessage(Plugin_Prefix + "§f" + String.join("§7, §f", alts));
+            s.sendMessage(Messages.PREFIX + "§f" + String.join("§7, §f", alts));
         }
     }
 
     private void handleReply(Player p, String[] args) {
-        Player target = MessageUtil.getLastMessaged(p);
+        Player target = messageUtil.getLastMessaged(p);
         if (target == null) {
             p.sendMessage("§c無法回覆，沒有找到對象");
             return;
         }
         String msg = String.join(" ", args);
-        MessageUtil.sendMessage(p, target, msg);
+        messageUtil.sendMessage(p, target, msg);
     }
 
     private void handleMessage(Player p, String label, String[] args) {
@@ -447,12 +475,12 @@ public class GameCommands implements CommandExecutor, TabCompleter {
             return;
         }
         String msg = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-        MessageUtil.sendMessage(p, t, msg);
+        messageUtil.sendMessage(p, t, msg);
     }
 
     private void handleDmToggle(Player p) {
-        if (MessageUtil.isDmListenerActive(p)) MessageUtil.removeDmListener(p);
-        else MessageUtil.addDmListener(p);
+        if (messageUtil.isDmListenerActive(p)) messageUtil.removeDmListener(p);
+        else messageUtil.addDmListener(p);
     }
 
     private void handleExplosion(CommandSender s, String[] args) {
@@ -461,17 +489,17 @@ public class GameCommands implements CommandExecutor, TabCompleter {
             return;
         }
         if (args.length < 1) {
-            s.sendMessage(Plugin_Prefix + "§c用法: /explosion <玩家>");
+            s.sendMessage(Messages.PREFIX + "§c用法: /explosion <玩家>");
             return;
         }
         Player t = Bukkit.getPlayer(args[0]);
         if (t == null) {
-            s.sendMessage(Plugin_Prefix + "§c指定的玩家不存在或不在線上。");
+            s.sendMessage(Messages.PREFIX + "§c指定的玩家不存在或不在線上。");
             return;
         }
         User u = PacketEvents.getAPI().getPlayerManager().getUser(t);
-        sendExplosion(u);
-        s.sendMessage(Plugin_Prefix + "§a正在傳送 Explosion Packet 給 " + getPlayerPrefix(t) + t.getDisplayName());
+        crashUtil.sendExplosion(u);
+        s.sendMessage(Messages.PREFIX + "§a正在傳送 Explosion Packet 給 " + luckPermsUtil.getPlayerPrefix(t) + t.getDisplayName());
     }
 
     private void handleParticle(CommandSender s, String[] args) {
@@ -480,19 +508,33 @@ public class GameCommands implements CommandExecutor, TabCompleter {
             return;
         }
         if (args.length < 1) {
-            s.sendMessage(Plugin_Prefix + "§c用法: /explosion <玩家>");
+            s.sendMessage(Messages.PREFIX + "§c用法: /explosion <玩家>");
             return;
         }
 
         Player t = Bukkit.getPlayer(args[0]);
         if (t == null) {
-            s.sendMessage(Plugin_Prefix + "§c指定的玩家不存在或不在線上。");
+            s.sendMessage(Messages.PREFIX + "§c指定的玩家不存在或不在線上。");
             return;
         }
         User u = PacketEvents.getAPI().getPlayerManager().getUser(t);
 
-        sendParticle(u);
-        s.sendMessage(Plugin_Prefix + "§a正在傳送 Particle Packet 給 " + getPlayerPrefix(t) + t.getDisplayName());
+        crashUtil.sendParticle(u);
+        s.sendMessage(Messages.PREFIX + "§a正在傳送 Particle Packet 給 " + luckPermsUtil.getPlayerPrefix(t) + t.getDisplayName());
+    }
+
+    private void handleWorld(Player p, String[] args) {
+        if (args.length < 1) {
+            p.sendMessage(Messages.PREFIX + "§c用法: /world <世界>");
+            return;
+        }
+        World w = Bukkit.getWorld(args[0]);
+        if (w == null) {
+            p.sendMessage(Messages.PREFIX + "§c無效的世界名稱");
+            return;
+        }
+        Location loc = w.getSpawnLocation();
+        p.teleport(loc);
     }
 
     private void handlePosition(CommandSender s, String[] args) {
@@ -501,19 +543,17 @@ public class GameCommands implements CommandExecutor, TabCompleter {
             return;
         }
         if (args.length < 1) {
-            s.sendMessage(Plugin_Prefix + "§c用法: /position <玩家>");
+            s.sendMessage(Messages.PREFIX + "§c用法: /position <玩家>");
             return;
         }
-
         Player t = Bukkit.getPlayer(args[0]);
         if (t == null) {
-            s.sendMessage(Plugin_Prefix + "§c指定的玩家不存在或不在線上。");
+            s.sendMessage(Messages.PREFIX + "§c指定的玩家不存在或不在線上。");
             return;
         }
         User u = PacketEvents.getAPI().getPlayerManager().getUser(t);
-
-        sendPosition(u);
-        s.sendMessage(Plugin_Prefix + "§a正在傳送 Position Packet 給 " + getPlayerPrefix(t) + t.getDisplayName());
+        crashUtil.sendPosition(u);
+        s.sendMessage(Messages.PREFIX + "§a正在傳送 Position Packet 給 " + luckPermsUtil.getPlayerPrefix(t) + t.getDisplayName());
     }
 
     private void handleNuke(CommandSender s, String[] args) {
@@ -526,15 +566,14 @@ public class GameCommands implements CommandExecutor, TabCompleter {
         }
         Player t = Bukkit.getPlayer(args[0]);
         if (t == null) {
-            s.sendMessage(Plugin_Prefix + "§c指定的玩家不存在或不在線上。");
+            s.sendMessage(Messages.PREFIX + "§c指定的玩家不存在或不在線上。");
             return;
         }
         User u = PacketEvents.getAPI().getPlayerManager().getUser(t);
-
-        sendExplosion(u);
-        sendParticle(u);
-        sendPosition(u);
-        s.sendMessage(Plugin_Prefix + "§a正在嘗試崩潰 " + getPlayerPrefix(t) + t.getDisplayName());
+        crashUtil.sendExplosion(u);
+        crashUtil.sendParticle(u);
+        crashUtil.sendPosition(u);
+        s.sendMessage(Messages.PREFIX + "§a正在嘗試崩潰 " + luckPermsUtil.getPlayerPrefix(t) + t.getDisplayName());
     }
 
     private void handleUUID(Player p, String[] args) {
@@ -548,7 +587,7 @@ public class GameCommands implements CommandExecutor, TabCompleter {
             return;
         }
         Component msg = Component.text()
-                .append(Component.text(Plugin_Prefix))
+                .append(Component.text(Messages.PREFIX))
                 .append(Component.text(t.getName() + " 的 UUID: "))
                 .append(Component.text(t.getUniqueId().toString())
                         .color(NamedTextColor.YELLOW)
@@ -561,15 +600,25 @@ public class GameCommands implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command cmd, @NotNull String a, String[] args) {
         if (!(s instanceof Player p)) return null;
-        List<String> result = new ArrayList<>();
-        if (cmd.getName().equalsIgnoreCase("home") || cmd.getName().equalsIgnoreCase("delhome")) {
-            if (args.length == 1 && HomeUtil.homesConfig.contains(p.getUniqueId().toString())) {
-                Set<String> homeNames = HomeUtil.homesConfig.getConfigurationSection(p.getUniqueId().toString()).getKeys(false);
-                for (String name : homeNames)
-                    if (name.toLowerCase().startsWith(args[0].toLowerCase()))
-                        result.add(name);
-            }
+        String cmdName = cmd.getName().toLowerCase();
+        switch (cmdName) {
+            case "home":
+            case "delhome":
+                if (args.length == 1) {
+                    Set<String> homeNames = homeUtil.getHomeNames(p.getUniqueId());
+                    List<String> result = new ArrayList<>();
+                    String input = args[0].toLowerCase();
+                    for (String name : homeNames) {
+                        if (name.toLowerCase().startsWith(input)) {
+                            result.add(name);
+                        }
+                    }
+                    return result;
+                }
+                break;
+            default:
+                break;
         }
-        return result;
+        return null;
     }
 }
