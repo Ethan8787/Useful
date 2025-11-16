@@ -1,5 +1,5 @@
 name: Useful
-version: '5.8.2'
+version: '6.0.0'
 main: dev.ethan.useful.Main
 api-version: '1.21'
 authors: [ Ethan ]
@@ -13,6 +13,9 @@ softdepend:
   - packetevents
 website: https://nul1.ddns.net
 commands:
+  useful:
+    description: Help command
+    usage: /<command>
   kms:
     description: Self-kill
     usage: /<command>
@@ -61,11 +64,6 @@ commands:
   unfreeze:
     description: Unfreeze a player
     usage: /unfreeze
-    permission: useful.admin
-    permission-message: Unknown command. Type "/help" for help.
-  feather:
-    description: Special feather
-    usage: /feather
     permission: useful.admin
     permission-message: Unknown command. Type "/help" for help.
   nick:
@@ -133,24 +131,9 @@ commands:
     usage: /removenpc
     permission: useful.admin
     permission-message: Unknown command. Type "/help" for help.
-  nuke:
-    description: Throw a Netty packet nuke on a player
-    usage: /nuke <Player>
-    permission: useful.admin
-    permission-message: Unknown command. Type "/help" for help.
-  explosion:
-    description: Crash method
-    usage: /explosion <Player>
-    permission: useful.admin
-    permission-message: Unknown command. Type "/help" for help.
-  particle:
-    description: Crash method
-    usage: /particle <Player>
-    permission: useful.admin
-    permission-message: Unknown command. Type "/help" for help.
-  position:
-    description: Crash method
-    usage: /position <Player>
+  crash:
+    description: Throw Netty packets nuke on a player
+    usage: /crash <Player>
     permission: useful.admin
     permission-message: Unknown command. Type "/help" for help.
   dmlisten:

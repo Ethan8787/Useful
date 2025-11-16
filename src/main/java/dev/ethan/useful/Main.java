@@ -6,6 +6,7 @@ import dev.ethan.useful.constants.Messages;
 import dev.ethan.useful.listeners.GameListener;
 import dev.ethan.useful.managers.PlaceHolderManager;
 import dev.ethan.useful.managers.PlayerStatusManager;
+import dev.ethan.useful.managers.RuntimeManager;
 import dev.ethan.useful.utils.*;
 import dev.iiahmed.disguise.DisguiseManager;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
@@ -33,6 +34,7 @@ public final class Main extends JavaPlugin {
     private PlaceHolderManager placeHolderManager;
     private LuckPerms luckPerms;
     public NickUtil nickStorage;
+    public RuntimeManager runtimeManager;
 
     @Override
     public void onEnable() {
@@ -53,6 +55,7 @@ public final class Main extends JavaPlugin {
         aceUtil = new AceUtil();
         botUtil = new BotUtil();
         crashUtil = new CrashUtil();
+        runtimeManager = new RuntimeManager();
         placeHolderManager = new PlaceHolderManager(this);
         DisguiseManager.initialize(this, true);
         PacketEvents.getAPI().init();
@@ -79,11 +82,11 @@ public final class Main extends JavaPlugin {
         GameCommands cmd = new GameCommands();
         String[] commands = {
                 "kms", "heal", "boom", "gms", "gmc", "gma", "gmsp", "sudo", "freeze",
-                "unfreeze", "feather", "nick", "unnick", "msg", "r", "w", "tell", "god",
-                "hat", "dupe", "ips", "alts", "gun", "botf", "bot", "removenpc", "nuke",
-                "explosion", "particle", "position", "dmlisten", "tpa", "tpahere", "tpaccept",
-                "tpdeny", "fly", "sethome", "homes", "home", "delhome", "block", "unblock",
-                "uuid", "blocklist", "world"
+                "unfreeze", "nick", "unnick", "msg", "r", "w", "tell", "god", "hat",
+                "dupe", "ips", "alts", "gun", "botf", "bot", "removenpc", "crash",
+                "dmlisten", "tpa", "tpahere", "tpaccept", "tpdeny", "fly", "sethome",
+                "homes", "home", "delhome", "block", "unblock", "uuid", "blocklist",
+                "world", "useful"
         };
         for (String s : commands) registerCommand(s, cmd);
     }
@@ -160,6 +163,10 @@ public final class Main extends JavaPlugin {
 
     public NickUtil getNickUtil(){
         return nickUtil;
+    }
+
+    public RuntimeManager getRuntimeManager() {
+        return runtimeManager;
     }
 
     public LuckPerms getLuckPerms() {

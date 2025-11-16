@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 
 public class PlaceHolderManager extends PlaceholderExpansion {
-
     private final JavaPlugin plugin;
 
     public PlaceHolderManager(JavaPlugin plugin) {
