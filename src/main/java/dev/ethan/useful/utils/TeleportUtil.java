@@ -56,19 +56,11 @@ public class TeleportUtil {
     }
 
     public void save() {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            synchronized (TeleportUtil.class) {
-                for (String key : new HashSet<>(config.getKeys(false))) config.set(key, null);
-                for (Map.Entry<UUID, Set<UUID>> e : blocks.entrySet()) {
-                    List<String> list = new ArrayList<>();
-                    for (UUID u : e.getValue()) list.add(u.toString());
-                    config.set(e.getKey().toString(), list);
-                }
-                try {
-                    config.save(file);
-                } catch (IOException ignored) {}
-            }
-        });
+        try {
+            config.save(file);
+        } catch (Exception ex) {
+            plugin.getLogger().warning("Failed to save teleport data: " + ex.getMessage());
+        }
     }
 
     public boolean isBlocked(UUID receiver, UUID sender) {

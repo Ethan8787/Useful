@@ -10,6 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
@@ -17,7 +18,7 @@ public class WeaponListener implements Listener {
     private final PlayerUtil playerUtil = Main.getInstance().getPlayerUtil();
 
     @EventHandler
-    public void onPlayerInteract(org.bukkit.event.player.PlayerInteractEvent e) {
+    public void onPlayerInteract(PlayerInteractEvent e) {
         Player p = e.getPlayer();
         ItemStack i = e.getItem();
         if (i == null) return;
@@ -32,9 +33,6 @@ public class WeaponListener implements Listener {
         if (i.getType() == Material.FEATHER) {
             if (itemName.equalsIgnoreCase(Messages.VANDAL_NAME)) {
                 if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
-                    if (!playerUtil.canShoot(p)) {
-                        return;
-                    }
                     playerUtil.shoot(p);
                     e.setCancelled(true);
                     return;

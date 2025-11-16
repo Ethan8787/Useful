@@ -14,13 +14,13 @@ public class LuckPermsUtil {
     private final LuckPerms luckPerms;
 
     public LuckPermsUtil(JavaPlugin plugin) {
-        RegisteredServiceProvider<LuckPerms> provider =
-                plugin.getServer().getServicesManager().getRegistration(LuckPerms.class);
+        RegisteredServiceProvider<LuckPerms> provider = plugin.getServer().getServicesManager().getRegistration(LuckPerms.class);
         if (provider == null) {
             plugin.getLogger().severe("LuckPerms not found! Prefix/suffix will not work.");
             this.luckPerms = null;
         } else {
             this.luckPerms = provider.getProvider();
+            plugin.getLogger().info("Successfully hooked into LuckPerms.");
         }
     }
 

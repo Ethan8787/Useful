@@ -13,12 +13,10 @@ public class PlaceHolderManager extends PlaceholderExpansion {
 
     public PlaceHolderManager(JavaPlugin plugin) {
         this.plugin = plugin;
-
         try {
             this.register();
-            plugin.getLogger().info("[Useful] PlaceholderAPI hooked successfully.");
         } catch (Exception e) {
-            plugin.getLogger().severe("[Useful] Failed to register PlaceholderAPI expansion:");
+            plugin.getLogger().severe("Failed to register PlaceholderAPI expansion:");
             e.printStackTrace();
         }
     }

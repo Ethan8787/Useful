@@ -4,7 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.ethan.useful.Main;
-import dev.ethan.useful.listeners.GameListener;
+import dev.ethan.useful.managers.GameManager;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -19,7 +19,12 @@ import java.net.URL;
 import java.util.UUID;
 
 public class PlayerUtil {
-    private final GameListener gameListener = Main.getInstance().getGameListener();
+    private final GameManager gameManager;
+
+    public PlayerUtil(GameManager gameManager) {
+        this.gameManager = gameManager;
+    }
+
     public void shoot(Player player) {
         Location eyeLoc = player.getEyeLocation();
         Vector direction = eyeLoc.getDirection().normalize();
@@ -37,11 +42,11 @@ public class PlayerUtil {
 
     public boolean canShoot(Player p) {
         long now = System.currentTimeMillis();
-        long last = gameListener.shootCooldown.getOrDefault(p.getUniqueId(), 0L);
-        if (now - last < gameListener.SHOOT_COOLDOWN_MS) {
+        long last = gameManager.getLastShootTime(p.getUniqueId());
+        if (now - last < gameManager.SHOOT_COOLDOWN_MS) {
             return false;
         }
-        gameListener.shootCooldown.put(p.getUniqueId(), now);
+        gameManager.setLastShootTime(p.getUniqueId(), now);
         return true;
     }
 

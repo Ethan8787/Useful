@@ -12,7 +12,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NickUtil {
-
     private final JavaPlugin plugin;
     private final File nickFile;
     private final FileConfiguration config;
@@ -81,16 +80,13 @@ public class NickUtil {
 
     public String getNickname(Player player) {
         UUID uuid = player.getUniqueId();
-
         if (nicknameCache.containsKey(uuid)) {
             return nicknameCache.get(uuid);
         }
-
         String nick = config.getString("nicks." + uuid + ".nickname");
         if (nick != null) {
             nicknameCache.put(uuid, nick);
         }
-
         return nick;
     }
 

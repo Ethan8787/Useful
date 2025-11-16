@@ -30,7 +30,6 @@ public class MessageUtil {
 
     public MessageUtil(JavaPlugin plugin) {
         this.plugin = plugin;
-
         loadConfig();
     }
 

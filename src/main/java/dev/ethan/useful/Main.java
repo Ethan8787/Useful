@@ -3,20 +3,22 @@ package dev.ethan.useful;
 import com.github.retrooper.packetevents.PacketEvents;
 import dev.ethan.useful.commands.GameCommands;
 import dev.ethan.useful.constants.Messages;
-import dev.ethan.useful.listeners.GameListener;
+import dev.ethan.useful.listeners.*;
 import dev.ethan.useful.managers.PlaceHolderManager;
 import dev.ethan.useful.managers.PlayerStatusManager;
-import dev.ethan.useful.managers.RuntimeManager;
+import dev.ethan.useful.managers.GameManager;
 import dev.ethan.useful.utils.*;
 import dev.iiahmed.disguise.DisguiseManager;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
-import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Main extends JavaPlugin {
+
     private static Main instance;
+
     private AceUtil aceUtil;
     private BotUtil botUtil;
     private CrashUtil crashUtil;
@@ -28,58 +30,66 @@ public final class Main extends JavaPlugin {
     private SnowballUtil snowballUtil;
     private TeleportUtil teleportUtil;
     private TranslationUtil translationUtil;
-    private GameListener gameListener;
     private NickUtil nickUtil;
     private PlayerStatusManager playerStatusManager;
     private PlaceHolderManager placeHolderManager;
-    private LuckPerms luckPerms;
-    public NickUtil nickStorage;
-    public RuntimeManager runtimeManager;
-
-    @Override
-    public void onEnable() {
-        instance = this;
-        Player author = Bukkit.getPlayer("27ms__");
-        if (author != null) {
-            author.sendMessage(Messages.PREFIX + "§aUseful-5.8.2.jar");
-        }
-        teleportUtil = new TeleportUtil(this);
-        messageUtil = new MessageUtil(this);
-        snowballUtil = new SnowballUtil(this);
-        ipTrackerUtil = new IPTrackerUtil(this);
-        luckPermsUtil = new LuckPermsUtil(this);
-        homeUtil = new HomeUtil(this);
-        nickStorage = new NickUtil(this);
-        playerUtil = new PlayerUtil();
-        translationUtil = new TranslationUtil();
-        aceUtil = new AceUtil();
-        botUtil = new BotUtil();
-        crashUtil = new CrashUtil();
-        runtimeManager = new RuntimeManager();
-        placeHolderManager = new PlaceHolderManager(this);
-        DisguiseManager.initialize(this, true);
-        PacketEvents.getAPI().init();
-        gameListener = new GameListener();
-        register();
-        getServer().getPluginManager().registerEvents(gameListener, this);
-        playerStatusManager = new PlayerStatusManager(this);
-    }
-
-    @Override
-    public void onDisable() {
-        teleportUtil.save();
-        if (nickUtil != null) {
-            nickUtil.close();
-        }
-    }
+    private GameManager gameManager;
 
     @Override
     public void onLoad() {
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
     }
 
-    private void register() {
-        GameCommands cmd = new GameCommands();
+    @Override
+    public void onEnable() {
+        instance = this;
+        printStartupBanner();
+        initServices();
+        hookDependencies();
+        registerCommands();
+        registerListeners();
+        playerStatusManager = new PlayerStatusManager(this);
+        sendDevMessage();
+    }
+
+    @Override
+    public void onDisable() {
+        try {
+            teleportUtil.save();
+            if (nickUtil != null) nickUtil.close();
+        } catch (Exception ex) {
+            getLogger().warning("Shutdown error: " + ex.getMessage());
+        }
+    }
+
+    private void initServices() {
+        luckPermsUtil = new LuckPermsUtil(this);
+        teleportUtil = new TeleportUtil(this);
+        messageUtil = new MessageUtil(this);
+        snowballUtil = new SnowballUtil(this);
+        ipTrackerUtil = new IPTrackerUtil(this);
+        homeUtil = new HomeUtil(this);
+        nickUtil = new NickUtil(this);
+        gameManager = new GameManager();
+        translationUtil = new TranslationUtil();
+        aceUtil = new AceUtil();
+        botUtil = new BotUtil();
+        crashUtil = new CrashUtil();
+        playerUtil = new PlayerUtil(gameManager);
+        placeHolderManager = new PlaceHolderManager(this);
+        getLogger().info("All services initialized");
+    }
+
+    private void hookDependencies() {
+        DisguiseManager.initialize(this, true);
+        getLogger().info("ModernDisguise hooked");
+        PacketEvents.getAPI().init();
+        getLogger().info("PacketEvents hooked");
+        getLogger().info("PlaceholderAPI hooked");
+    }
+
+    private void registerCommands() {
+        GameCommands executor = new GameCommands();
         String[] commands = {
                 "kms", "heal", "boom", "gms", "gmc", "gma", "gmsp", "sudo", "freeze",
                 "unfreeze", "nick", "unnick", "msg", "r", "w", "tell", "god", "hat",
@@ -88,92 +98,66 @@ public final class Main extends JavaPlugin {
                 "homes", "home", "delhome", "block", "unblock", "uuid", "blocklist",
                 "world", "useful"
         };
-        for (String s : commands) registerCommand(s, cmd);
-    }
-
-    private void registerCommand(String name, GameCommands executor) {
-        var cmd = getCommand(name);
-        if (cmd == null) {
-            getLogger().warning("Command not found in plugin.yml: " + name);
-            return;
+        for (String name : commands) {
+            var cmd = getCommand(name);
+            if (cmd == null) {
+                getLogger().warning("Missing command in plugin.yml: " + name);
+                continue;
+            }
+            cmd.setExecutor(executor);
+            cmd.setTabCompleter(executor);
         }
-        cmd.setExecutor(executor);
-        cmd.setTabCompleter(executor);
+        getLogger().info("All commands registered");
     }
 
-    public static Main getInstance() {
-        return instance;
+    private void registerListeners() {
+        PluginManager pm = Bukkit.getPluginManager();
+        pm.registerEvents(new PlayerJoinQuitListener(), this);
+        pm.registerEvents(new MovementListener(), this);
+        pm.registerEvents(new WeaponListener(), this);
+        pm.registerEvents(new AnvilListener(), this);
+        pm.registerEvents(new DeathListener(), this);
+        pm.registerEvents(new KillEffectListener(), this);
+        pm.registerEvents(new CommandBlockerListener(), this);
+        getLogger().info("All listeners registered");
     }
 
-    public AceUtil getAceUtil() {
-        return aceUtil;
+    private void sendDevMessage() {
+        Player p = Bukkit.getPlayer("27ms__");
+        if (p != null)
+            p.sendMessage(Messages.PREFIX + "§dUseful-6.0.0 §fLoaded");
     }
 
-    public BotUtil getBotUtil() {
-        return botUtil;
+    private void printStartupBanner() {
+        log("&d◤═══════════════════════════════════◥  ");
+        log("&d║                                   &d║  ");
+        log("&d║       &fName: &dUseful Plugin         &d║  ");
+        log("&d║          &fVersion: &d" + getDescription().getVersion() + "           ║  ");
+        log("&d║      &fAuthor: &d27ms__ (Ethan)       &d║  ");
+        log("&d║                                   &d║  ");
+        log("&d◣═══════════════════════════════════◢  ");
     }
 
-    public CrashUtil getCrashUtil() {
-        return crashUtil;
+    private void log(String msg) {
+        Bukkit.getConsoleSender().sendMessage(ConsoleUtil.colorize(msg));
     }
 
-    public HomeUtil getHomeUtil() {
-        return homeUtil;
-    }
+    public static Main getInstance() { return instance; }
 
-    public IPTrackerUtil getIPTrackerUtil() {
-        return ipTrackerUtil;
-    }
-
-    public LuckPermsUtil getLuckPermsUtil() {
-        return luckPermsUtil;
-    }
-
-    public MessageUtil getMessageUtil() {
-        return messageUtil;
-    }
-
-    public PlayerUtil getPlayerUtil() {
-        return playerUtil;
-    }
-
-    public SnowballUtil getSnowballUtil() {
-        return snowballUtil;
-    }
-
-    public PlaceHolderManager getPlaceHolderManager() {
-        return placeHolderManager;
-    }
-
-    public PlayerStatusManager getPlayerStatusManager() {
-        return playerStatusManager;
-    }
-
-    public TeleportUtil getTeleportUtil() {
-        return teleportUtil;
-    }
-
-    public GameListener getGameListener() {
-        return gameListener;
-    }
-
-    public TranslationUtil getTranslationUtil() {
-        return translationUtil;
-    }
-
-    public NickUtil getNickUtil(){
-        return nickUtil;
-    }
-
-    public RuntimeManager getRuntimeManager() {
-        return runtimeManager;
-    }
-
-    public LuckPerms getLuckPerms() {
-        return luckPerms;
-    }
-
-    public static NickUtil nick() {
-        return instance.nickStorage;
-    }
+    public AceUtil getAceUtil() { return aceUtil; }
+    public BotUtil getBotUtil() { return botUtil; }
+    public CrashUtil getCrashUtil() { return crashUtil; }
+    public HomeUtil getHomeUtil() { return homeUtil; }
+    public IPTrackerUtil getIPTrackerUtil() { return ipTrackerUtil; }
+    public LuckPermsUtil getLuckPermsUtil() { return luckPermsUtil; }
+    public MessageUtil getMessageUtil() { return messageUtil; }
+    public PlayerUtil getPlayerUtil() { return playerUtil; }
+    public SnowballUtil getSnowballUtil() { return snowballUtil; }
+    public PlaceHolderManager getPlaceHolderManager() { return placeHolderManager; }
+    public PlayerStatusManager getPlayerStatusManager() { return playerStatusManager; }
+    public TeleportUtil getTeleportUtil() { return teleportUtil; }
+    public TranslationUtil getTranslationUtil() { return translationUtil; }
+    public GameManager getGameManager() { return gameManager; }
+    public NickUtil getNickUtil() { return nickUtil; }
+    public static NickUtil nick() { return instance.nickUtil; }
 }

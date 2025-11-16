@@ -7,12 +7,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class RuntimeManager {
+public class GameManager {
     private final Set<String> frozenPlayers = ConcurrentHashMap.newKeySet();
     private final Map<UUID, Location> deathLocations = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> killStreaks = new ConcurrentHashMap<>();
-    private final Map<UUID, Long> shootCooldown = new ConcurrentHashMap<>();
-    public static final long SHOOT_COOLDOWN_MS = 100L;
+    public final Map<UUID, Long> shootCooldown = new ConcurrentHashMap<>();
+    public final long SHOOT_COOLDOWN_MS = 100L;
 
     public boolean isFrozen(String name) {
         return frozenPlayers.contains(name);
