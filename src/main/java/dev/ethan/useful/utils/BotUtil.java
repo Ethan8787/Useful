@@ -69,7 +69,6 @@ public class BotUtil {
         npc.setProtected(false);
         SkinTrait skinTrait = npc.getOrAddTrait(SkinTrait.class);
         skinTrait.setSkinName(name);
-
     }
 
     public void removeAllNPCs() {

@@ -21,12 +21,8 @@ public class PlayerStatusManager extends BukkitRunnable {
         for (Player p : getOnlinePlayers()) {
             boolean nicked = playerUtil.isNicked(p);
             boolean vanished = playerUtil.isVanished(p);
-
             if (nicked || vanished) {
-                String msg = "§fYou are currently " +
-                        (vanished ? "§cVANISHED" : "") +
-                        ((vanished && nicked) ? ", " : "") +
-                        (nicked ? "§cNICKED" : "");
+                String msg = "§fYou are currently " + (vanished ? "§cVANISHED" : "") + ((vanished && nicked) ? ", " : "") + (nicked ? "§cNICKED" : "");
                 sendActionBar(p, msg);
             }
         }

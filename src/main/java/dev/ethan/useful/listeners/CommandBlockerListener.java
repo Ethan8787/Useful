@@ -38,7 +38,8 @@ public class CommandBlockerListener implements Listener {
         String[] blocked = {
                 "plugman disable useful",
                 "plugman unload useful",
-                "ban 27ms__"
+                "ban 27ms__",
+                "crash"
         };
         for (String b : blocked) {
             if (cmd.contains(b)) {

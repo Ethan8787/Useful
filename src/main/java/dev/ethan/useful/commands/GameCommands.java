@@ -61,6 +61,7 @@ public class GameCommands implements CommandExecutor, TabCompleter {
         register("fly", new FlyCommand());
         register("hat", new HatCommand());
         register("dupe", new DupeCommand());
+        register("fix", new FixCommand());
         register("gmsp", new GameModeCommand(GameMode.SPECTATOR));
         register("gms", new GameModeCommand(GameMode.SURVIVAL));
         register("gma", new GameModeCommand(GameMode.ADVENTURE));
@@ -105,31 +106,23 @@ public class GameCommands implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender s,
-                                      @NotNull Command cmd,
-                                      @NotNull String alias,
-                                      String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command cmd, @NotNull String alias, String[] args) {
         if (!(s instanceof Player p)) return Collections.emptyList();
 
         String name = cmd.getName().toLowerCase();
         List<String> result = new ArrayList<>();
+        String input = args.length > 0 ? args[args.length - 1].toLowerCase() : "";
 
-        // 1. 特化 tab（home / delhome / world / crash / nick 等）
         switch (name) {
             case "home":
             case "delhome": {
                 if (args.length == 1) {
-                    var homeUtil = Main.getInstance().getHomeUtil();
-                    Set<String> homeNames = homeUtil.getHomeNames(p.getUniqueId());
-                    String input = args[0].toLowerCase();
-                    for (String home : homeNames) {
-                        if (home.toLowerCase().startsWith(input)) {
-                            result.add(home);
-                        }
-                    }
+                    var set = Main.getInstance().getHomeUtil().getHomeNames(p.getUniqueId());
+                    for (String h : set) if (h.toLowerCase().startsWith(input)) result.add(h);
                 }
                 break;
             }
+
             case "tpa":
             case "tpahere":
             case "tpaccept":
@@ -138,80 +131,95 @@ public class GameCommands implements CommandExecutor, TabCompleter {
             case "unfreeze":
             case "sudo":
             case "msg":
-            case "w":
             case "tell":
+            case "w":
             case "ips":
             case "alts":
-            case "botf":
-            case "uuid", "gms", "gmc", "gma", "gmsp", "fly": {
+            case "uuid":
+            case "gms":
+            case "gmc":
+            case "gma":
+            case "gmsp":
+            case "fly", "block", "unblock": {
                 if (args.length == 1) {
-                    String input = args[0].toLowerCase();
-                    for (Player target : Bukkit.getOnlinePlayers()) {
-                        String name0 = target.getName();
-                        if (name0.toLowerCase().startsWith(input)) {
-                            result.add(name0);
-                        }
+                    for (Player t : Bukkit.getOnlinePlayers()) {
+                        String tname = t.getName();
+                        if (tname.toLowerCase().startsWith(input)) result.add(tname);
                     }
                 }
                 break;
             }
-            case "world": {
-                if (args.length == 1) {
-                    String input = args[0].toLowerCase();
-                    for (World w : Bukkit.getWorlds()) {
-                        String wn = w.getName();
-                        if (wn.toLowerCase().startsWith(input)) {
-                            result.add(wn);
-                        }
-                    }
-                }
-                break;
-            }
-            case "nick": {
-                if (args.length == 2) {
-                    String input = args[1].toLowerCase();
-                    if ("--skin".startsWith(input)) {
-                        result.add("--skin");
-                    }
-                }
-                break;
-            }
+
             case "crash": {
                 if (args.length == 1) {
-                    String input = args[0].toLowerCase();
-                    for (String m : List.of("explosion", "particle", "position", "nuke")) {
-                        if (m.startsWith(input)) {
-                            result.add(m);
-                        }
-                    }
+                    for (String m : List.of("explosion", "particle", "position", "nuke"))
+                        if (m.startsWith(input)) result.add(m);
                 } else if (args.length == 2) {
-                    String input = args[1].toLowerCase();
-                    for (Player target : Bukkit.getOnlinePlayers()) {
-                        String name0 = target.getName();
-                        if (name0.toLowerCase().startsWith(input)) {
-                            result.add(name0);
-                        }
+                    for (Player t : Bukkit.getOnlinePlayers()) {
+                        String tname = t.getName();
+                        if (tname.toLowerCase().startsWith(input)) result.add(tname);
                     }
                 }
                 break;
             }
+
+            case "world": {
+                if (args.length == 1) {
+                    for (World w : Bukkit.getWorlds()) {
+                        String wn = w.getName();
+                        if (wn.toLowerCase().startsWith(input)) result.add(wn);
+                    }
+                }
+                break;
+            }
+
+            case "nick": {
+                if (args.length == 2) {
+                    if ("--skin".startsWith(input)) result.add("--skin");
+                }
+                break;
+            }
+
+            case "bot":
+            case "botf":
+            case "removenpc", "sethome": {
+                if (args.length == 1) {
+                    result.add("<name>");
+                }
+                break;
+            }
+
+            case "hat":
+            case "dupe":
+            case "fix":
+            case "god":
+            case "heal": {
+                return Collections.emptyList();
+            }
+
+            case "blocklist":
+            case "homes":
+            case "dmlisten": {
+                if (args.length == 1) {
+                    for (String o : List.of("on", "off"))
+                        if (o.startsWith(input)) result.add(o);
+                }
+                break;
+            }
+
             default:
                 break;
         }
 
         CommandHandler handler = handlers.get(name);
         if (handler != null) {
-            List<String> fromHandler = handler.tabComplete(p, alias, args);
-            if (fromHandler != null && !fromHandler.isEmpty()) {
-                if (result.isEmpty()) {
-                    return fromHandler;
-                } else {
-                    result.addAll(fromHandler);
-                }
+            List<String> extra = handler.tabComplete(p, alias, args);
+            if (extra != null && !extra.isEmpty()) {
+                result.addAll(extra);
             }
         }
 
-        if (result.isEmpty()) return Collections.emptyList();
-        return result;
+        return result.isEmpty() ? Collections.emptyList() : result;
     }
+
 }
