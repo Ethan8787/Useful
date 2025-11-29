@@ -1,5 +1,5 @@
 name: Useful
-version: '6.0.0'
+version: '6.2.1'
 main: dev.ethan.useful.Main
 api-version: '1.21'
 authors: [ Ethan ]
@@ -97,8 +97,13 @@ commands:
     description: Equip the item in your hand to your helmet slot
     usage: /hat
   dupe:
-    description: Duplicate iten in hand
+    description: Duplicate item in hand
     usage: /dupe
+    permission: useful.admin
+    permission-message: Unknown command. Type "/help" for help.
+  fix:
+    description: Fix item in hand
+    usage: /fix
     permission: useful.admin
     permission-message: Unknown command. Type "/help" for help.
   ips:
@@ -133,14 +138,14 @@ commands:
     permission-message: Unknown command. Type "/help" for help.
   crash:
     description: Throw Netty packets nuke on a player
-    usage: /crash <Player>
-    permission: useful.admin
+    usage: /crash <type> <player> | /crash <type>
+    permission: useful.default
     permission-message: Unknown command. Type "/help" for help.
   dmlisten:
     description: Toggle listening to direct messages.
     usage: /dmlisten [on|off]
     permission: useful.admin
-    permission-message: You do not have permission to use this command.
+    permission-message: Unknown command. Type "/help" for help.
   tpa:
     description: Request to teleport to another player.
     usage: /tpa <player>

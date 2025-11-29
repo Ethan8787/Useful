@@ -48,7 +48,6 @@ public final class Main extends JavaPlugin {
         hookDependencies();
         registerCommands();
         registerListeners();
-        playerStatusManager = new PlayerStatusManager(this);
         sendDevMessage();
     }
 
@@ -77,6 +76,7 @@ public final class Main extends JavaPlugin {
         crashUtil = new CrashUtil();
         playerUtil = new PlayerUtil(gameManager);
         placeHolderManager = new PlaceHolderManager(this);
+        playerStatusManager = new PlayerStatusManager(this);
         getLogger().info("All services initialized");
     }
 
@@ -96,7 +96,7 @@ public final class Main extends JavaPlugin {
                 "dupe", "ips", "alts", "gun", "botf", "bot", "removenpc", "crash",
                 "dmlisten", "tpa", "tpahere", "tpaccept", "tpdeny", "fly", "sethome",
                 "homes", "home", "delhome", "block", "unblock", "uuid", "blocklist",
-                "world", "useful"
+                "world", "useful", "fix"
         };
         for (String name : commands) {
             var cmd = getCommand(name);
@@ -124,18 +124,14 @@ public final class Main extends JavaPlugin {
 
     private void sendDevMessage() {
         Player p = Bukkit.getPlayer("27ms__");
-        if (p != null)
-            p.sendMessage(Messages.PREFIX + "§dUseful-6.0.0 §fLoaded");
+        if (p != null) p.sendMessage(Messages.PREFIX + "§3Useful §bv6.2.1");
     }
 
     private void printStartupBanner() {
-        log("&d◤═══════════════════════════════════◥  ");
-        log("&d║                                   &d║  ");
-        log("&d║       &fName: &dUseful Plugin         &d║  ");
-        log("&d║          &fVersion: &d" + getDescription().getVersion() + "           ║  ");
-        log("&d║      &fAuthor: &d27ms__ (Ethan)       &d║  ");
-        log("&d║                                   &d║  ");
-        log("&d◣═══════════════════════════════════◢  ");
+        log("&9┏━━━━━━━━━━━━━━━┓  ");
+        log("&9┃ &3Useful &bv" + getDescription().getVersion() + " &9┃  ");
+        log("&9┃ &3Author&f: &bEthan &9┃  ");
+        log("&9┗━━━━━━━━━━━━━━━┛  ");
     }
 
     private void log(String msg) {

