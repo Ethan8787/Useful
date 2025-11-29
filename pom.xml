@@ -6,7 +6,7 @@
 
     <groupId>dev.ethan</groupId>
     <artifactId>Useful</artifactId>
-    <version>6.0.0</version>
+    <version>6.2.1</version>
     <packaging>jar</packaging>
 
     <name>Useful</name>
@@ -46,6 +46,17 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
