@@ -4,7 +4,6 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -14,7 +13,9 @@ public class LuckPermsUtil {
     private final LuckPerms luckPerms;
 
     public LuckPermsUtil(JavaPlugin plugin) {
-        RegisteredServiceProvider<LuckPerms> provider = plugin.getServer().getServicesManager().getRegistration(LuckPerms.class);
+        RegisteredServiceProvider<LuckPerms> provider =
+                plugin.getServer().getServicesManager().getRegistration(LuckPerms.class);
+
         if (provider == null) {
             plugin.getLogger().severe("LuckPerms not found! Prefix/suffix will not work.");
             this.luckPerms = null;
@@ -30,7 +31,7 @@ public class LuckPermsUtil {
         if (u == null) return "";
         CachedMetaData meta = u.getCachedData().getMetaData();
         String prefix = meta.getPrefix();
-        return prefix != null ? ChatColor.translateAlternateColorCodes('&', prefix) : "";
+        return prefix != null ? prefix : "";
     }
 
     public String getPlayerPrefix(OfflinePlayer offline) {
@@ -45,17 +46,15 @@ public class LuckPermsUtil {
             return "";
         }
         if (u == null) return "";
-        CachedMetaData meta = u.getCachedData().getMetaData();
-        String prefix = meta.getPrefix();
-        return prefix != null ? ChatColor.translateAlternateColorCodes('&', prefix) : "";
+        String prefix = u.getCachedData().getMetaData().getPrefix();
+        return prefix != null ? prefix : "";
     }
 
     public String getPlayerSuffix(Player p) {
         if (luckPerms == null) return "";
         User u = luckPerms.getUserManager().getUser(p.getUniqueId());
         if (u == null) return "";
-        CachedMetaData meta = u.getCachedData().getMetaData();
-        String suffix = meta.getSuffix();
-        return suffix != null ? ChatColor.translateAlternateColorCodes('&', suffix) : "";
+        String suffix = u.getCachedData().getMetaData().getSuffix();
+        return suffix != null ? suffix : "";
     }
 }

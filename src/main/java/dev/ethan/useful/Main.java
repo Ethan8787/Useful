@@ -119,6 +119,7 @@ public final class Main extends JavaPlugin {
         pm.registerEvents(new DeathListener(), this);
         pm.registerEvents(new KillEffectListener(), this);
         pm.registerEvents(new CommandBlockerListener(), this);
+        pm.registerEvents(new CrystalListener(), this);
         getLogger().info("All listeners registered");
     }
 

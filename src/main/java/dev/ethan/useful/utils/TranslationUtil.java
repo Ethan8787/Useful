@@ -1,18 +1,17 @@
 package dev.ethan.useful.utils;
 
-import org.bukkit.Material;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class TranslationUtil {
     private static final Map<EntityType, String> ENTITY_NAME_MAP = new HashMap<>();
-    private static final Map<Material, String> ITEM_NAME_MAP = new HashMap<>();
 
     static {
         ENTITY_NAME_MAP.put(EntityType.ACACIA_BOAT, "相思木船");
@@ -31,7 +30,7 @@ public class TranslationUtil {
         ENTITY_NAME_MAP.put(EntityType.BIRCH_CHEST_BOAT, "樺木儲物船");
         ENTITY_NAME_MAP.put(EntityType.BLAZE, "烈焰使者");
         ENTITY_NAME_MAP.put(EntityType.BLOCK_DISPLAY, "方塊展示");
-        ENTITY_NAME_MAP.put(EntityType.BOGGED, "泥殭屍（沼殭屍）");
+        ENTITY_NAME_MAP.put(EntityType.BOGGED, "泥殭屍");
         ENTITY_NAME_MAP.put(EntityType.BREEZE, "微風怪");
         ENTITY_NAME_MAP.put(EntityType.BREEZE_WIND_CHARGE, "風彈");
         ENTITY_NAME_MAP.put(EntityType.CAMEL, "駱駝");
@@ -45,7 +44,7 @@ public class TranslationUtil {
         ENTITY_NAME_MAP.put(EntityType.COMMAND_BLOCK_MINECART, "指令方塊礦車");
         ENTITY_NAME_MAP.put(EntityType.COPPER_GOLEM, "銅魔像");
         ENTITY_NAME_MAP.put(EntityType.COW, "牛");
-        ENTITY_NAME_MAP.put(EntityType.CREAKING, "喀嚓怪（Creaking）");
+        ENTITY_NAME_MAP.put(EntityType.CREAKING, "喀嚓怪");
         ENTITY_NAME_MAP.put(EntityType.CREEPER, "苦力怕");
         ENTITY_NAME_MAP.put(EntityType.DARK_OAK_BOAT, "黑橡木船");
         ENTITY_NAME_MAP.put(EntityType.DARK_OAK_CHEST_BOAT, "黑橡木儲物船");
@@ -146,7 +145,7 @@ public class TranslationUtil {
         ENTITY_NAME_MAP.put(EntityType.STRIDER, "熾足獸");
         ENTITY_NAME_MAP.put(EntityType.TADPOLE, "蝌蚪");
         ENTITY_NAME_MAP.put(EntityType.TEXT_DISPLAY, "文字展示");
-        ENTITY_NAME_MAP.put(EntityType.TNT, "點燃的 TNT");
+        ENTITY_NAME_MAP.put(EntityType.TNT, "TNT");
         ENTITY_NAME_MAP.put(EntityType.TNT_MINECART, "TNT 礦車");
         ENTITY_NAME_MAP.put(EntityType.TRADER_LLAMA, "商用羊駝");
         ENTITY_NAME_MAP.put(EntityType.TRIDENT, "三叉戟");
@@ -168,48 +167,51 @@ public class TranslationUtil {
         ENTITY_NAME_MAP.put(EntityType.ZOMBIE_HORSE, "殭屍馬");
         ENTITY_NAME_MAP.put(EntityType.ZOMBIE_VILLAGER, "殭屍村民");
         ENTITY_NAME_MAP.put(EntityType.ZOMBIFIED_PIGLIN, "殭屍化豬布林");
-
     }
 
-    public String getDeathMessageByCause(String prefix, String name, EntityDamageEvent.DamageCause cause) {
-        prefix = prefix == null ? "" : prefix;
-        name = name == null ? "某人" : name;
-        return "§4死亡" + " §7» " + prefix + name + "§f " + switch (cause) {
-            case DROWNING -> "被淹死了";
-            case FALL -> "摔死了";
-            case FIRE, FIRE_TICK -> "被燒死了";
-            case LAVA -> "以為他能泡溫泉";
-            case VOID -> "以為虛空是天堂";
-            case LIGHTNING -> "遭到天譴";
-            case SUFFOCATION -> "缺乏生存基本要素 (氧氣)";
-            case STARVATION -> "缺乏生存基本要素 (食物)";
-            case POISON -> "吸毒吸死了";
-            case MAGIC -> "被不知道三小魔術殺死了";
-            case WITHER -> "屌零了";
-            case FLY_INTO_WALL -> "知道了鞘翅的好玩之處";
-            case BLOCK_EXPLOSION, ENTITY_EXPLOSION -> "被炸死了";
-            case DRAGON_BREATH -> "被終界龍吐的紫色黏稠口水噁心死了";
-            case FALLING_BLOCK -> "被方塊壓成紙片了";
-            case PROJECTILE -> "被射死了";
-            case FREEZE -> "被凍死了";
-            case CRAMMING -> "被擠死了";
-            case SONIC_BOOM -> "被伏守者操爛了";
-            case SUICIDE -> "想不開";
-            default -> "死亡";
-        };
+    public Component getDeathMessageByCause(String prefix, String name, EntityDamageEvent.DamageCause cause) {
+        Component prefixComponent = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand()
+                        .deserialize(prefix);
+        TextColor color = prefixComponent.color();
+        if (color == null) color = TextColor.color(0xFFFFFF);
+        Component nameComponent = Component.text(name).color(color);
+
+        return Component.text("死亡 ", NamedTextColor.DARK_RED)
+                .append(Component.text("» ", NamedTextColor.GRAY))
+                .append(prefixComponent)
+                .append(nameComponent)
+                .append(Component.text(" "))
+                .append(Component.text(switch (cause) {
+                    case DROWNING -> "溺死了";
+                    case FALL -> "摔死了";
+                    case FIRE -> "在火焰中昇天";
+                    case FIRE_TICK -> "被燒死了";
+                    case LAVA -> "試圖在岩漿中游泳";
+                    case VOID -> "掉到世界外面了";
+                    case LIGHTNING -> "被閃電擊中";
+                    case SUFFOCATION -> "因窒息而死";
+                    case STARVATION -> "被餓死了";
+                    case POISON -> "被毒死了";
+                    case MAGIC -> "被魔法殺死了";
+                    case WITHER -> "因凋零而死";
+                    case FLY_INTO_WALL -> "體驗了動能";
+                    case BLOCK_EXPLOSION -> "被炸飛了";
+                    case ENTITY_EXPLOSION -> "被炸死了";
+                    case FALLING_BLOCK -> "被鐵砧壓扁了";
+                    case PROJECTILE -> "被射殺了";
+                    case FREEZE -> "被凍死了";
+                    case CRAMMING -> "被擠壓致死";
+                    case SONIC_BOOM -> "被一道聲波尖嘯抹殺了";
+                    case SUICIDE -> "死了";
+                    case CONTACT -> "被刺死了";
+                    case HOT_FLOOR -> "察覺地面是片熔岩";
+                    case WORLD_BORDER -> "試圖逃離這個世界";
+                    case KILL -> "被殺死了";
+                    default -> "死亡";
+                }, NamedTextColor.WHITE));
     }
 
-    public String getCustomTranslatedEntityName(Entity e) {
-        return ENTITY_NAME_MAP.getOrDefault(e.getType(), e.getName());
-    }
-
-    public String getCustomTranslatedItemName(ItemStack i) {
-        if (i != null && i.getType() != Material.AIR) {
-            String name = ITEM_NAME_MAP.getOrDefault(i.getType(),
-                    (i.hasItemMeta() && Objects.requireNonNull(i.getItemMeta()).hasDisplayName())
-                            ? i.getItemMeta().getDisplayName() : "");
-            return name != null ? name : "";
-        }
-        return "";
+    public Component getCustomTranslatedEntityName(Entity e) {
+        return Component.text(ENTITY_NAME_MAP.getOrDefault(e.getType(), e.getName()), NamedTextColor.GRAY);
     }
 }
