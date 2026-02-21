@@ -17,12 +17,4 @@ public class MovementListener implements Listener {
             e.setTo(e.getFrom());
         }
     }
-
-    public void freezePlayer(String name) {
-        gameManager.freezePlayer(name);
-    }
-
-    public void unfreezePlayer(String name) {
-        gameManager.unfreezePlayer(name);
-    }
 }

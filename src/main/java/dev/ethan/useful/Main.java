@@ -1,19 +1,39 @@
 package dev.ethan.useful;
 
 import com.github.retrooper.packetevents.PacketEvents;
-import dev.ethan.useful.commands.GameCommands;
 import dev.ethan.useful.constants.Messages;
-import dev.ethan.useful.listeners.*;
+import dev.ethan.useful.listeners.AnvilListener;
+import dev.ethan.useful.listeners.CommandBlockerListener;
+import dev.ethan.useful.listeners.CrystalListener;
+import dev.ethan.useful.listeners.DeathListener;
+import dev.ethan.useful.listeners.KillEffectListener;
+import dev.ethan.useful.listeners.MovementListener;
+import dev.ethan.useful.listeners.PlayerJoinQuitListener;
+import dev.ethan.useful.listeners.WeaponListener;
+import dev.ethan.useful.managers.GameManager;
 import dev.ethan.useful.managers.PlaceHolderManager;
 import dev.ethan.useful.managers.PlayerStatusManager;
-import dev.ethan.useful.managers.GameManager;
-import dev.ethan.useful.utils.*;
+import dev.ethan.useful.utils.AceUtil;
+import dev.ethan.useful.utils.BotUtil;
+import dev.ethan.useful.utils.ConsoleUtil;
+import dev.ethan.useful.utils.CrashUtil;
+import dev.ethan.useful.utils.HomeUtil;
+import dev.ethan.useful.utils.IPTrackerUtil;
+import dev.ethan.useful.utils.LuckPermsUtil;
+import dev.ethan.useful.utils.MessageUtil;
+import dev.ethan.useful.utils.NickUtil;
+import dev.ethan.useful.utils.PlayerBlockingUtil;
+import dev.ethan.useful.utils.PlayerUtil;
+import dev.ethan.useful.utils.SnowballUtil;
+import dev.ethan.useful.utils.TeleportUtil;
+import dev.ethan.useful.utils.TranslationUtil;
 import dev.iiahmed.disguise.DisguiseManager;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import top.nontage.nontagelib.command.NontageCommandLoader;
 
 public final class Main extends JavaPlugin {
 
@@ -31,6 +51,7 @@ public final class Main extends JavaPlugin {
     private TeleportUtil teleportUtil;
     private TranslationUtil translationUtil;
     private NickUtil nickUtil;
+    private PlayerBlockingUtil playerBlockingUtil;
     private PlayerStatusManager playerStatusManager;
     private PlaceHolderManager placeHolderManager;
     private GameManager gameManager;
@@ -53,61 +74,64 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        try {
-            teleportUtil.save();
-            if (nickUtil != null) nickUtil.close();
-        } catch (Exception ex) {
-            getLogger().warning("Shutdown error: " + ex.getMessage());
-        }
+        shutdownServices();
     }
 
     private void initServices() {
         luckPermsUtil = new LuckPermsUtil(this);
+        playerBlockingUtil = new PlayerBlockingUtil(this, luckPermsUtil);
+
         teleportUtil = new TeleportUtil(this);
         messageUtil = new MessageUtil(this);
         snowballUtil = new SnowballUtil(this);
         ipTrackerUtil = new IPTrackerUtil(this);
         homeUtil = new HomeUtil(this);
         nickUtil = new NickUtil(this);
+
         gameManager = new GameManager();
+        playerUtil = new PlayerUtil(gameManager);
+
         translationUtil = new TranslationUtil();
         aceUtil = new AceUtil();
         botUtil = new BotUtil();
         crashUtil = new CrashUtil();
-        playerUtil = new PlayerUtil(gameManager);
+
         placeHolderManager = new PlaceHolderManager(this);
         playerStatusManager = new PlayerStatusManager(this);
+
         getLogger().info("All services initialized");
     }
 
     private void hookDependencies() {
         DisguiseManager.initialize(this, true);
         getLogger().info("ModernDisguise hooked");
+
         PacketEvents.getAPI().init();
         getLogger().info("PacketEvents hooked");
+
         getLogger().info("PlaceholderAPI hooked");
     }
 
-    private void registerCommands() {
-        GameCommands executor = new GameCommands();
-        String[] commands = {
-                "kms", "heal", "boom", "gms", "gmc", "gma", "gmsp", "sudo", "freeze",
-                "unfreeze", "nick", "unnick", "msg", "r", "w", "tell", "god", "hat",
-                "dupe", "ips", "alts", "gun", "botf", "bot", "removenpc", "crash",
-                "dmlisten", "tpa", "tpahere", "tpaccept", "tpdeny", "fly", "sethome",
-                "homes", "home", "delhome", "block", "unblock", "uuid", "blocklist",
-                "world", "useful", "fix"
-        };
-        for (String name : commands) {
-            var cmd = getCommand(name);
-            if (cmd == null) {
-                getLogger().warning("Missing command in plugin.yml: " + name);
-                continue;
+    private void shutdownServices() {
+
+        try {
+
+            if (playerBlockingUtil != null) {
+                playerBlockingUtil.save();
             }
-            cmd.setExecutor(executor);
-            cmd.setTabCompleter(executor);
+
+            if (nickUtil != null) {
+                nickUtil.close();
+            }
+
+        } catch (Exception ex) {
+            getLogger().severe("Shutdown error: " + ex.getMessage());
         }
-        getLogger().info("All commands registered");
+    }
+
+    private void registerCommands() {
+        NontageCommandLoader.registerAll(this);
+        getLogger().info("All commands registered (NontageCommandLoader)");
     }
 
     private void registerListeners() {
@@ -139,22 +163,75 @@ public final class Main extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage(ConsoleUtil.colorize(msg));
     }
 
-    public static Main getInstance() { return instance; }
+    public static Main getInstance() {
+        return instance;
+    }
 
-    public AceUtil getAceUtil() { return aceUtil; }
-    public BotUtil getBotUtil() { return botUtil; }
-    public CrashUtil getCrashUtil() { return crashUtil; }
-    public HomeUtil getHomeUtil() { return homeUtil; }
-    public IPTrackerUtil getIPTrackerUtil() { return ipTrackerUtil; }
-    public LuckPermsUtil getLuckPermsUtil() { return luckPermsUtil; }
-    public MessageUtil getMessageUtil() { return messageUtil; }
-    public PlayerUtil getPlayerUtil() { return playerUtil; }
-    public SnowballUtil getSnowballUtil() { return snowballUtil; }
-    public PlaceHolderManager getPlaceHolderManager() { return placeHolderManager; }
-    public PlayerStatusManager getPlayerStatusManager() { return playerStatusManager; }
-    public TeleportUtil getTeleportUtil() { return teleportUtil; }
-    public TranslationUtil getTranslationUtil() { return translationUtil; }
-    public GameManager getGameManager() { return gameManager; }
-    public NickUtil getNickUtil() { return nickUtil; }
-    public static NickUtil nick() { return instance.nickUtil; }
+    public AceUtil getAceUtil() {
+        return aceUtil;
+    }
+
+    public BotUtil getBotUtil() {
+        return botUtil;
+    }
+
+    public CrashUtil getCrashUtil() {
+        return crashUtil;
+    }
+
+    public HomeUtil getHomeUtil() {
+        return homeUtil;
+    }
+
+    public IPTrackerUtil getIPTrackerUtil() {
+        return ipTrackerUtil;
+    }
+
+    public LuckPermsUtil getLuckPermsUtil() {
+        return luckPermsUtil;
+    }
+
+    public MessageUtil getMessageUtil() {
+        return messageUtil;
+    }
+
+    public PlayerUtil getPlayerUtil() {
+        return playerUtil;
+    }
+
+    public SnowballUtil getSnowballUtil() {
+        return snowballUtil;
+    }
+
+    public PlayerBlockingUtil getPlayerBlockingUtil() {
+        return playerBlockingUtil;
+    }
+
+    public PlaceHolderManager getPlaceHolderManager() {
+        return placeHolderManager;
+    }
+
+    public PlayerStatusManager getPlayerStatusManager() {
+        return playerStatusManager;
+    }
+
+    public TeleportUtil getTeleportUtil() {
+        return teleportUtil;
+    }
+
+    public TranslationUtil getTranslationUtil() {
+        return translationUtil;
+    }
+
+    public GameManager getGameManager() {
+        return gameManager;
+    }
+
+    public NickUtil getNickUtil() {
+        return nickUtil;
+    }
+
+    public static NickUtil nick() {
+        return instance.nickUtil;
+    }
 }
