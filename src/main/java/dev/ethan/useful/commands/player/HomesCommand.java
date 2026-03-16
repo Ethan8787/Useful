@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "homes", permission = "guildwars.player.homes", description = "List homes", override = true)
+@CommandInfo(name = "homes", permission = "useful.player.homes", description = "List homes", override = true)
 public class HomesCommand implements NontageCommand {
 
     private final HomeUtil homeUtil = Main.getInstance().getHomeUtil();

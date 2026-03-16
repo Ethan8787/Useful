@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "tpdeny", permission = "guildwars.player.tpdeny", description = "Deny teleport request", override = true)
+@CommandInfo(name = "tpdeny", permission = "useful.player.tpdeny", description = "Deny teleport request", override = true)
 public class TpdenyCommand implements NontageCommand {
 
     private final TeleportUtil teleportUtil = Main.getInstance().getTeleportUtil();

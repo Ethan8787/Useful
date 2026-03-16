@@ -6,8 +6,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -17,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TeleportUtil {
 
-    // 主線程專用：如果哪天你不小心 async 叫到，會直接炸，避免 silent bug
     private void ensureMainThread() {
         if (!Bukkit.isPrimaryThread()) {
             throw new IllegalStateException("TeleportUtil accessed async!");
@@ -28,30 +29,33 @@ public class TeleportUtil {
     private final LuckPermsUtil luckPermsUtil;
     private final PlayerBlockingUtil blockingUtil;
 
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+
     private static final long REQUEST_EXPIRE_MS = 5L * 60L * 1000L;
     private static final long COOLDOWN_MS = 3000L;
     private static final int TELEPORT_DELAY_SEC = 5;
-    private static final double MOVE_CANCEL_DISTANCE_SQ = 0.2;
 
-    // 單一 Map：key(receiver, requester) -> expireAt
     private final Map<RequestKey, Long> tpaRequests = new ConcurrentHashMap<>();
     private final Map<RequestKey, Long> tpahereRequests = new ConcurrentHashMap<>();
-
-    // cooldown: sender -> nextAllowedAt
     private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> pendingTeleports = new ConcurrentHashMap<>();
 
     public TeleportUtil(JavaPlugin plugin) {
         this.plugin = plugin;
         this.luckPermsUtil = Main.getInstance().getLuckPermsUtil();
         this.blockingUtil = Main.getInstance().getPlayerBlockingUtil();
 
-        // 每 1 分鐘清掉過期資料，避免 map 一直長
         new BukkitRunnable() {
             @Override
             public void run() {
                 cleanupExpired();
             }
         }.runTaskTimer(plugin, 1200L, 1200L);
+    }
+
+    private Component legacy(String s) {
+        if (s == null || s.isEmpty()) return Component.empty();
+        return LEGACY.deserialize(s);
     }
 
     private void cleanupExpired() {
@@ -88,6 +92,36 @@ public class TeleportUtil {
         map.remove(new RequestKey(receiver, requester));
     }
 
+    private Player findOnlinePlayer(String name) {
+        Player p = Bukkit.getPlayerExact(name);
+        if (p != null) return p;
+        for (Player pl : Bukkit.getOnlinePlayers()) {
+            if (pl.getName().equalsIgnoreCase(name)) return pl;
+        }
+        return null;
+    }
+
+    private boolean removeRequestByNameFromMap(Map<RequestKey, Long> map, UUID receiver, String requesterName) {
+        ensureMainThread();
+        long now = System.currentTimeMillis();
+        for (Map.Entry<RequestKey, Long> e : map.entrySet()) {
+            RequestKey k = e.getKey();
+            Long exp = e.getValue();
+            if (exp == null || exp <= now) {
+                map.remove(k);
+                continue;
+            }
+            if (!k.receiver.equals(receiver)) continue;
+            OfflinePlayer op = Bukkit.getOfflinePlayer(k.requester);
+            String n = op.getName();
+            if (n != null && n.equalsIgnoreCase(requesterName)) {
+                map.remove(k);
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean checkCooldown(Player sender) {
         ensureMainThread();
         long now = System.currentTimeMillis();
@@ -110,7 +144,7 @@ public class TeleportUtil {
         }
         if (!checkCooldown(sender)) return;
 
-        Player target = Bukkit.getPlayer(args[0]);
+        Player target = findOnlinePlayer(args[0]);
         if (target == null || !target.isOnline() || !sender.canSee(target)) {
             sender.sendMessage(Messages.PREFIX + "§f找不到該玩家或該玩家不在線上");
             return;
@@ -126,18 +160,11 @@ public class TeleportUtil {
 
         addRequest(tpaRequests, target.getUniqueId(), sender.getUniqueId());
 
-        Component accept = Component.text("✔", NamedTextColor.GREEN)
-                .hoverEvent(HoverEvent.showText(Component.text("同意", NamedTextColor.GREEN)))
-                .clickEvent(ClickEvent.runCommand("/tpaccept " + sender.getName()));
+        Component accept = Component.text("✔", NamedTextColor.GREEN).hoverEvent(HoverEvent.showText(Component.text("同意", NamedTextColor.GREEN))).clickEvent(ClickEvent.runCommand("/tpaccept " + sender.getName()));
 
-        Component deny = Component.text(" ❌", NamedTextColor.RED)
-                .hoverEvent(HoverEvent.showText(Component.text("拒絕", NamedTextColor.RED)))
-                .clickEvent(ClickEvent.runCommand("/tpdeny " + sender.getName()));
+        Component deny = Component.text(" ❌", NamedTextColor.RED).hoverEvent(HoverEvent.showText(Component.text("拒絕", NamedTextColor.RED))).clickEvent(ClickEvent.runCommand("/tpdeny " + sender.getName()));
 
-        Component message = Component.text(Messages.PREFIX)
-                .append(Component.text(luckPermsUtil.getPlayerPrefix(sender) + sender.getDisplayName(), NamedTextColor.WHITE))
-                .append(Component.text(" §f想傳送到你這裡 "))
-                .append(accept).append(deny);
+        Component message = legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(sender) + sender.getDisplayName())).append(Component.text(" 想傳送到你這裡 ", NamedTextColor.GRAY)).append(accept).append(deny);
 
         target.sendMessage(message);
         sender.sendMessage(Messages.PREFIX + "§f已向 " + luckPermsUtil.getPlayerPrefix(target) + target.getDisplayName() + " §f發送請求");
@@ -162,7 +189,7 @@ public class TeleportUtil {
                 if (!p.equals(sender) && sender.canSee(p)) targets.add(p);
             }
         } else {
-            Player target = Bukkit.getPlayer(args[0]);
+            Player target = findOnlinePlayer(args[0]);
             if (target == null || !target.isOnline() || !sender.canSee(target)) {
                 sender.sendMessage(Messages.PREFIX + "§f找不到該玩家或該玩家不在線上");
                 return;
@@ -185,25 +212,17 @@ public class TeleportUtil {
 
             addRequest(tpahereRequests, target.getUniqueId(), sender.getUniqueId());
 
-            Component accept = Component.text("✔", NamedTextColor.GREEN)
-                    .hoverEvent(HoverEvent.showText(Component.text("同意", NamedTextColor.GREEN)))
-                    .clickEvent(ClickEvent.runCommand("/tpaccept " + sender.getName()));
+            Component accept = Component.text("✔", NamedTextColor.GREEN).hoverEvent(HoverEvent.showText(Component.text("同意", NamedTextColor.GREEN))).clickEvent(ClickEvent.runCommand("/tpaccept " + sender.getName()));
 
-            Component deny = Component.text(" ❌", NamedTextColor.RED)
-                    .hoverEvent(HoverEvent.showText(Component.text("拒絕", NamedTextColor.RED)))
-                    .clickEvent(ClickEvent.runCommand("/tpdeny " + sender.getName()));
+            Component deny = Component.text(" ❌", NamedTextColor.RED).hoverEvent(HoverEvent.showText(Component.text("拒絕", NamedTextColor.RED))).clickEvent(ClickEvent.runCommand("/tpdeny " + sender.getName()));
 
-            Component message = Component.text(Messages.PREFIX)
-                    .append(Component.text(luckPermsUtil.getPlayerPrefix(sender) + sender.getDisplayName(), NamedTextColor.WHITE))
-                    .append(Component.text(" §f想你傳送到他那裡 "))
-                    .append(accept).append(deny);
+            Component message = legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(sender) + sender.getDisplayName())).append(Component.text(" 想把你傳送到他那裡 ", NamedTextColor.GRAY)).append(accept).append(deny);
 
             target.sendMessage(message);
             sent++;
         }
 
-        sender.sendMessage(Messages.PREFIX + "§f已向 " + sent + " §f位玩家發送傳送請求"
-                + (skipped > 0 ? "，其中 " + skipped + " §f位玩家已封鎖你，已略過" : ""));
+        sender.sendMessage(Messages.PREFIX + "§f已向 " + sent + " §f位玩家發送傳送請求" + (skipped > 0 ? "，其中 " + skipped + " §f位玩家已封鎖你，已略過" : ""));
     }
 
     public void handleTpacceptCommand(Player acceptor, String[] args) {
@@ -214,13 +233,19 @@ public class TeleportUtil {
             return;
         }
 
-        Player requester = Bukkit.getPlayer(args[0]);
+        Player requester = findOnlinePlayer(args[0]);
+        UUID acc = acceptor.getUniqueId();
+
         if (requester == null || !requester.isOnline()) {
-            acceptor.sendMessage(Messages.PREFIX + "§f該玩家不在線上");
+            boolean removed = removeRequestByNameFromMap(tpahereRequests, acc, args[0]) || removeRequestByNameFromMap(tpaRequests, acc, args[0]);
+            if (removed) {
+                acceptor.sendMessage(Messages.PREFIX + "§f該玩家不在線上，已清除該請求");
+            } else {
+                acceptor.sendMessage(Messages.PREFIX + "§f該玩家沒有對你發送請求或已過期");
+            }
             return;
         }
 
-        UUID acc = acceptor.getUniqueId();
         UUID req = requester.getUniqueId();
 
         if (hasRequest(tpahereRequests, acc, req)) {
@@ -246,53 +271,68 @@ public class TeleportUtil {
             return;
         }
 
-        Player sender = Bukkit.getPlayer(args[0]);
-        if (sender == null || !sender.isOnline()) {
-            receiver.sendMessage(Messages.PREFIX + "§f該玩家不在線上");
+        UUID rec = receiver.getUniqueId();
+        String name = args[0];
+
+        Player sender = findOnlinePlayer(name);
+        if (sender != null && sender.isOnline()) {
+            UUID snd = sender.getUniqueId();
+
+            boolean removed = false;
+            if (hasRequest(tpahereRequests, rec, snd)) {
+                removeRequest(tpahereRequests, rec, snd);
+                removed = true;
+            } else if (hasRequest(tpaRequests, rec, snd)) {
+                removeRequest(tpaRequests, rec, snd);
+                removed = true;
+            }
+
+            if (!removed) {
+                receiver.sendMessage(Messages.PREFIX + "§f該玩家沒有對你發送請求或已過期");
+                return;
+            }
+
+            sender.sendMessage(Messages.PREFIX + luckPermsUtil.getPlayerPrefix(receiver) + receiver.getDisplayName() + " §f拒絕了你的請求");
+            receiver.sendMessage(Messages.PREFIX + "§f你已拒絕請求");
             return;
         }
 
-        UUID rec = receiver.getUniqueId();
-        UUID snd = sender.getUniqueId();
-
-        boolean removed = false;
-
-        if (hasRequest(tpahereRequests, rec, snd)) {
-            removeRequest(tpahereRequests, rec, snd);
-            removed = true;
-        } else if (hasRequest(tpaRequests, rec, snd)) {
-            removeRequest(tpaRequests, rec, snd);
-            removed = true;
-        }
-
+        boolean removed = removeRequestByNameFromMap(tpahereRequests, rec, name) || removeRequestByNameFromMap(tpaRequests, rec, name);
         if (!removed) {
             receiver.sendMessage(Messages.PREFIX + "§f該玩家沒有對你發送請求或已過期");
             return;
         }
 
-        sender.sendMessage(Messages.PREFIX + luckPermsUtil.getPlayerPrefix(receiver) + receiver.getDisplayName() + " §f拒絕了你的請求");
         receiver.sendMessage(Messages.PREFIX + "§f你已拒絕請求");
     }
 
     public void delayedTeleport(Player player, Location target, String name) {
         ensureMainThread();
 
-        Location start = player.getLocation().clone();
+        UUID pid = player.getUniqueId();
+        Integer prev = pendingTeleports.remove(pid);
+        if (prev != null) {
+            Bukkit.getScheduler().cancelTask(prev);
+        }
+
         player.sendMessage(Messages.PREFIX + "§f將在 §e" + TELEPORT_DELAY_SEC + " 秒 §f後傳送到 §a" + name + " §f請不要移動..");
 
-        new BukkitRunnable() {
+        final int[] myTaskId = new int[1];
+
+        BukkitRunnable runner = new BukkitRunnable() {
             int count = TELEPORT_DELAY_SEC;
 
             @Override
             public void run() {
                 if (!player.isOnline()) {
+                    Integer cur = pendingTeleports.get(pid);
+                    if (cur != null && cur == myTaskId[0]) pendingTeleports.remove(pid);
                     cancel();
                     return;
                 }
 
-                Location now = player.getLocation();
-                if (now.getWorld() != start.getWorld() || now.distanceSquared(start) > MOVE_CANCEL_DISTANCE_SQ) {
-                    player.sendMessage(Messages.PREFIX + "§c傳送已取消，因為你移動了。");
+                Integer cur = pendingTeleports.get(pid);
+                if (cur == null || cur != myTaskId[0]) {
                     cancel();
                     return;
                 }
@@ -300,6 +340,7 @@ public class TeleportUtil {
                 if (count <= 0) {
                     player.teleport(target);
                     player.sendMessage(Messages.PREFIX + "§a已傳送到 §f" + name);
+                    pendingTeleports.remove(pid);
                     cancel();
                     return;
                 }
@@ -307,8 +348,33 @@ public class TeleportUtil {
                 player.sendMessage("§7將在 §e" + count + "§7 秒後傳送..");
                 count--;
             }
-        }.runTaskTimer(plugin, 0L, 20L);
+        };
+
+        int id = runner.runTaskTimer(plugin, 0L, 20L).getTaskId();
+        myTaskId[0] = id;
+        pendingTeleports.put(pid, id);
     }
 
-    private record RequestKey(UUID receiver, UUID requester) {}
+    private static final class RequestKey {
+        private final UUID receiver;
+        private final UUID requester;
+
+        private RequestKey(UUID receiver, UUID requester) {
+            this.receiver = receiver;
+            this.requester = requester;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof RequestKey)) return false;
+            RequestKey that = (RequestKey) o;
+            return receiver.equals(that.receiver) && requester.equals(that.requester);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(receiver, requester);
+        }
+    }
 }

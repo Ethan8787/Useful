@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "unblock", permission = "guildwars.player.unblock", description = "Unblock teleport", override = true)
+@CommandInfo(name = "unblock", permission = "useful.player.unblock", description = "Unblock teleport", override = true)
 public class UnblockCommand implements NontageCommand {
 
     private final PlayerBlockingUtil blockingUtil = Main.getInstance().getPlayerBlockingUtil();

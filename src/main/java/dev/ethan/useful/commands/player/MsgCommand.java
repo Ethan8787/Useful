@@ -10,7 +10,7 @@ import top.nontage.nontagelib.command.NontageCommand;
 
 import java.util.Arrays;
 
-@CommandInfo(name = "msg", permission = "guildwars.player.msg", description = "Private message", override = true)
+@CommandInfo(name = "msg", permission = "useful.player.msg", description = "Private message", override = true)
 public class MsgCommand implements NontageCommand {
 
     private final MessageUtil messageUtil = Main.getInstance().getMessageUtil();

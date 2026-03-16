@@ -1,4 +1,4 @@
-package dev.ethan.useful.commands.player;
+package dev.ethan.useful.commands.admin;
 
 import dev.ethan.useful.constants.Messages;
 import org.bukkit.Material;
@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "dupe", permission = "guildwars.player.dupe", description = "Duplicate item in hand", override = true)
+@CommandInfo(name = "dupe", permission = "useful.admin.dupe", description = "Duplicate item in hand", override = true)
 public class DupeCommand implements NontageCommand {
 
     @Override

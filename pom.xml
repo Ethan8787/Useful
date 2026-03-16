@@ -95,7 +95,7 @@
                         <configuration>
                             <target>
                                 <echo>Coping jar file to target dir...</echo>
-                                <copy file="${project.build.directory}/${project.build.finalName}.jar" todir="D:\null\smp\plugins" overwrite="true"/>
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar" todir="D:\smp\plugins" overwrite="true"/>
                             </target>
                         </configuration>
                     </execution>

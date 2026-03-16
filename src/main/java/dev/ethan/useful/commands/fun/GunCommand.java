@@ -20,7 +20,7 @@ import top.nontage.nontagelib.command.NontageCommand;
 import java.util.ArrayList;
 import java.util.List;
 
-@CommandInfo(name = "gun", permission = "guildwars.fun.gun", description = "Give custom gun item", override = true)
+@CommandInfo(name = "gun", permission = "useful.fun.gun", description = "Give custom gun item", override = true)
 public class GunCommand implements NontageCommand {
 
     @Override

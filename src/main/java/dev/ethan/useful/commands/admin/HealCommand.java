@@ -1,4 +1,9 @@
-package dev.ethan.useful.commands.player;
+/*
+目的：
+1) /heal 完全治癒時同時解除燃燒 (fire ticks = 0)
+2) 支援：/heal、/heal *、/heal <數值>、/heal <玩家>
+*/
+package dev.ethan.useful.commands.admin;
 
 import dev.ethan.useful.Main;
 import dev.ethan.useful.constants.Messages;
@@ -13,7 +18,7 @@ import top.nontage.nontagelib.command.NontageCommand;
 
 import java.util.Objects;
 
-@CommandInfo(name = "heal", permission = "guildwars.player.heal", description = "Heal yourself or others", override = true)
+@CommandInfo(name = "heal", permission = "useful.admin.heal", description = "Heal yourself or others", override = true)
 public class HealCommand implements NontageCommand {
 
     private final LuckPermsUtil luckPermsUtil = Main.getInstance().getLuckPermsUtil();
@@ -23,7 +28,6 @@ public class HealCommand implements NontageCommand {
 
         if (!(sender instanceof Player player)) return;
 
-        // 自己完全治癒
         if (args.length == 0) {
             healFull(player);
             player.sendMessage(Messages.PREFIX + "§d已治癒");
@@ -31,24 +35,18 @@ public class HealCommand implements NontageCommand {
             return;
         }
 
-        // 全服治癒 *
         if (args[0].equals("*")) {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 healFull(online);
-                online.sendMessage(Messages.PREFIX + "§d你被 "
-                        + luckPermsUtil.getPlayerPrefix(player)
-                        + player.getName() + " §d治癒了");
+                online.sendMessage(Messages.PREFIX + "§d你被 " + luckPermsUtil.getPlayerPrefix(player) + player.getName() + " §d治癒了");
             }
-
             player.sendMessage(Messages.PREFIX + "§d已治癒所有線上玩家");
             return;
         }
 
-        // 設定血量數值
         try {
             double value = Double.parseDouble(args[0]);
-            double maxHealth = Objects.requireNonNull(
-                    player.getAttribute(Attribute.MAX_HEALTH)).getValue();
+            double maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue();
 
             if (value < 0 || value > maxHealth) {
                 player.sendMessage(Messages.PREFIX + "§c血量必須在 0 到 " + maxHealth + " 之間");
@@ -56,12 +54,13 @@ public class HealCommand implements NontageCommand {
             }
 
             player.setHealth(value);
+            player.setFireTicks(0);
             player.sendMessage(Messages.PREFIX + "§d已設定生命值為 " + value);
             return;
 
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+        }
 
-        // 指定玩家治癒
         Player targetPlayer = Bukkit.getPlayer(args[0]);
 
         if (targetPlayer == null) {
@@ -70,20 +69,13 @@ public class HealCommand implements NontageCommand {
         }
 
         healFull(targetPlayer);
-
-        targetPlayer.sendMessage(Messages.PREFIX + "§d你被 "
-                + luckPermsUtil.getPlayerPrefix(player)
-                + player.getName() + " §d治癒了");
-
-        player.sendMessage(Messages.PREFIX + "§d你治癒了 "
-                + luckPermsUtil.getPlayerPrefix(targetPlayer)
-                + targetPlayer.getName());
+        targetPlayer.sendMessage(Messages.PREFIX + "§d你被 " + luckPermsUtil.getPlayerPrefix(player) + player.getName() + " §d治癒了");
+        player.sendMessage(Messages.PREFIX + "§d你治癒了 " + luckPermsUtil.getPlayerPrefix(targetPlayer) + targetPlayer.getName());
     }
 
     private void healFull(Player target) {
-        target.setHealth(
-                Objects.requireNonNull(target.getAttribute(Attribute.MAX_HEALTH)).getValue()
-        );
+        target.setHealth(Objects.requireNonNull(target.getAttribute(Attribute.MAX_HEALTH)).getValue());
         target.setFoodLevel(20);
+        target.setFireTicks(0);
     }
 }

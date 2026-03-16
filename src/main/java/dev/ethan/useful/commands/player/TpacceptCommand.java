@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "tpaccept", permission = "guildwars.player.tpaccept", description = "Accept teleport request", override = true)
+@CommandInfo(name = "tpaccept", permission = "useful.player.tpaccept", description = "Accept teleport request", override = true)
 public class TpacceptCommand implements NontageCommand {
 
     private final TeleportUtil teleportUtil = Main.getInstance().getTeleportUtil();

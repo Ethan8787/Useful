@@ -9,7 +9,7 @@ import top.nontage.nontagelib.command.NontageCommand;
 
 import java.util.Arrays;
 
-@CommandInfo(name = "sudo", permission = "guildwars.admin.sudo", description = "Force a player to execute command", override = true)
+@CommandInfo(name = "sudo", permission = "useful.admin.sudo", description = "Force a player to execute command", override = true)
 public class SudoCommand implements NontageCommand {
 
     @Override

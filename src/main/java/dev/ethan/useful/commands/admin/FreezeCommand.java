@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "freeze", permission = "guildwars.admin.freeze", description = "Freeze a player", override = true)
+@CommandInfo(name = "freeze", permission = "useful.admin.freeze", description = "Freeze a player", override = true)
 public class FreezeCommand implements NontageCommand {
     private final GameManager gameManager = Main.getInstance().getGameManager();
     private final LuckPermsUtil luckPermsUtil = Main.getInstance().getLuckPermsUtil();

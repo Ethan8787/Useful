@@ -1,4 +1,4 @@
-package dev.ethan.useful.commands.player;
+package dev.ethan.useful.commands.admin;
 
 import dev.ethan.useful.Main;
 import dev.ethan.useful.constants.Messages;
@@ -9,8 +9,8 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "god", permission = "guildwars.player.god", description = "Toggle invulnerable", override = true)
-public class GodCommand implements NontageCommand {
+@CommandInfo(name = "fly", permission = "useful.admin.fly", description = "Toggle flight", override = true)
+public class FlyCommand implements NontageCommand {
 
     private final LuckPermsUtil luckPermsUtil = Main.getInstance().getLuckPermsUtil();
 
@@ -21,20 +21,20 @@ public class GodCommand implements NontageCommand {
 
         // 自己
         if (args.length == 0) {
-            toggleGod(player);
-            player.sendMessage(Messages.PREFIX + "§f無敵狀態 "
-                    + (player.isInvulnerable() ? "§aOn" : "§cOff"));
+            toggleFly(player);
+            player.sendMessage(Messages.PREFIX + "§f飛行狀態 "
+                    + (player.getAllowFlight() ? "§aOn" : "§cOff"));
             return;
         }
 
         // 全服 *
         if (args[0].equals("*")) {
             for (Player online : Bukkit.getOnlinePlayers()) {
-                toggleGod(online);
-                online.sendMessage(Messages.PREFIX + "§f無敵狀態 "
-                        + (online.isInvulnerable() ? "§aOn" : "§cOff"));
+                toggleFly(online);
+                online.sendMessage(Messages.PREFIX + "§f飛行狀態 "
+                        + (online.getAllowFlight() ? "§aOn" : "§cOff"));
             }
-            player.sendMessage(Messages.PREFIX + "§d已切換所有線上玩家無敵狀態");
+            player.sendMessage(Messages.PREFIX + "§d已切換所有線上玩家飛行狀態");
             return;
         }
 
@@ -45,25 +45,25 @@ public class GodCommand implements NontageCommand {
             return;
         }
 
-        toggleGod(targetPlayer);
+        toggleFly(targetPlayer);
 
         if (player.equals(targetPlayer)) {
-            player.sendMessage(Messages.PREFIX + "§f無敵狀態 "
-                    + (targetPlayer.isInvulnerable() ? "§aOn" : "§cOff"));
+            player.sendMessage(Messages.PREFIX + "§f飛行狀態 "
+                    + (targetPlayer.getAllowFlight() ? "§aOn" : "§cOff"));
             return;
         }
 
         player.sendMessage(Messages.PREFIX
                 + luckPermsUtil.getPlayerPrefix(targetPlayer)
                 + targetPlayer.getName()
-                + " §f的無敵狀態 "
-                + (targetPlayer.isInvulnerable() ? "§aOn" : "§cOff"));
+                + " §f的飛行狀態 "
+                + (targetPlayer.getAllowFlight() ? "§aOn" : "§cOff"));
 
-        targetPlayer.sendMessage(Messages.PREFIX + "§f無敵狀態 "
-                + (targetPlayer.isInvulnerable() ? "§aOn" : "§cOff"));
+        targetPlayer.sendMessage(Messages.PREFIX + "§f飛行狀態 "
+                + (targetPlayer.getAllowFlight() ? "§aOn" : "§cOff"));
     }
 
-    private void toggleGod(Player target) {
-        target.setInvulnerable(!target.isInvulnerable());
+    private void toggleFly(Player target) {
+        target.setAllowFlight(!target.getAllowFlight());
     }
 }

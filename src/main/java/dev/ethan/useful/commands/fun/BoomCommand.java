@@ -15,7 +15,7 @@ import top.nontage.nontagelib.command.NontageCommand;
 
 import java.util.Objects;
 
-@CommandInfo(name = "boom", permission = "guildwars.fun.boom", description = "Launch a player with firework", override = true)
+@CommandInfo(name = "boom", permission = "useful.fun.boom", description = "Launch a player with firework", override = true)
 public class BoomCommand implements NontageCommand {
 
     private final LuckPermsUtil luckPermsUtil = Main.getInstance().getLuckPermsUtil();

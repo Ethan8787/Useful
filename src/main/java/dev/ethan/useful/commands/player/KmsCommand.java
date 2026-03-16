@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "kms", permission = "guildwars.player.kms", description = "Kill yourself", override = true)
+@CommandInfo(name = "kms", permission = "useful.player.kms", description = "Kill yourself", override = true)
 public class KmsCommand implements NontageCommand {
 
     @Override

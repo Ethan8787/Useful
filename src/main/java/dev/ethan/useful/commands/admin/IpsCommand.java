@@ -10,7 +10,7 @@ import top.nontage.nontagelib.command.NontageCommand;
 
 import java.util.List;
 
-@CommandInfo(name = "ips", permission = "guildwars.admin.ips", description = "Check player IP list", override = true)
+@CommandInfo(name = "ips", permission = "useful.admin.ips", description = "Check player IP list", override = true)
 public class IpsCommand implements NontageCommand {
     private final IPTrackerUtil ipTrackerUtil = Main.getInstance().getIPTrackerUtil();
     @Override

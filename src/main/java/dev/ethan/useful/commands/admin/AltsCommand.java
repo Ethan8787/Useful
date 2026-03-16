@@ -10,7 +10,7 @@ import top.nontage.nontagelib.command.NontageCommand;
 
 import java.util.*;
 
-@CommandInfo(name = "alts", permission = "guildwars.admin.alts", description = "Check alternate accounts by IP", override = true)
+@CommandInfo(name = "alts", permission = "useful.admin.alts", description = "Check alternate accounts by IP", override = true)
 public class AltsCommand implements NontageCommand {
     private final IPTrackerUtil ipTrackerUtil = Main.getInstance().getIPTrackerUtil();
     @Override

@@ -1,9 +1,9 @@
-package dev.ethan.useful.commands.player.gameMode;
+package dev.ethan.useful.commands.admin.gameMode;
 
 import org.bukkit.GameMode;
 import top.nontage.nontagelib.annotations.CommandInfo;
 
-@CommandInfo(name = "gms", permission = "guildwars.player.gms", description = "Set gamemode to survival", override = true)
+@CommandInfo(name = "gms", permission = "useful.admin.gms", description = "Set gamemode to survival", override = true)
 public class GamemodeSurvivalCommand extends AbstractGameModeCommand {
 
     public GamemodeSurvivalCommand() {

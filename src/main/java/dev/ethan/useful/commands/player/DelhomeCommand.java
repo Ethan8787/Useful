@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "delhome", permission = "guildwars.player.delhome", description = "Delete home", override = true)
+@CommandInfo(name = "delhome", permission = "useful.player.delhome", description = "Delete home", override = true)
 public class DelhomeCommand implements NontageCommand {
     private final HomeUtil homeUtil = Main.getInstance().getHomeUtil();
     @Override

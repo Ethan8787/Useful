@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "hat", permission = "guildwars.player.hat", description = "Wear item as hat", override = true)
+@CommandInfo(name = "hat", permission = "useful.player.hat", description = "Wear item as hat", override = true)
 public class HatCommand implements NontageCommand {
 
     @Override

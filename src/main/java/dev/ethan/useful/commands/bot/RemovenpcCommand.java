@@ -10,7 +10,7 @@ import top.nontage.nontagelib.command.NontageCommand;
 
 @CommandInfo(
         name = "removenpc",
-        permission = "guildwars.admin.removenpc",
+        permission = "useful.admin.removenpc",
         description = "Remove all NPCs",
         override = true
 )

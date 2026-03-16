@@ -8,6 +8,7 @@ import dev.iiahmed.disguise.Disguise;
 import dev.iiahmed.disguise.DisguiseManager;
 import dev.iiahmed.disguise.DisguiseProvider;
 import dev.iiahmed.disguise.SkinAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -16,12 +17,7 @@ import top.nontage.nontagelib.command.NontageCommand;
 
 import java.util.UUID;
 
-@CommandInfo(
-        name = "nick",
-        permission = "useful.nick",
-        description = "Change nickname",
-        override = true
-)
+@CommandInfo(name = "nick", permission = "useful.nick.use", description = "Change nickname", override = true)
 public class NickCommand implements NontageCommand {
 
     private final PlayerUtil playerUtil = Main.getInstance().getPlayerUtil();
@@ -30,7 +26,6 @@ public class NickCommand implements NontageCommand {
 
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
-
         if (!(sender instanceof Player p)) {
             sender.sendMessage(Messages.PREFIX + "§cOnly players can use this command.");
             return;
@@ -44,32 +39,35 @@ public class NickCommand implements NontageCommand {
         String nick = args[0].replace("&", "§");
         boolean changeSkin = hasSkinFlag(args);
 
-        Main.nick().setNickname(p, nick);
+        p.sendMessage(Messages.PREFIX + "§7Processing...");
 
-        p.setDisplayName(nick);
-        p.setPlayerListName(nick);
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            UUID skinUUID;
+            try {
+                skinUUID = changeSkin ? resolveSkin(p, nick) : p.getUniqueId();
+            } catch (Exception e) {
+                skinUUID = p.getUniqueId();
+            }
 
-        Disguise disguise = buildDisguise(p, nick, changeSkin);
-        provider.disguise(p, disguise);
+            final UUID finalSkinUUID = skinUUID;
 
-        p.sendMessage(Messages.PREFIX + "§aNick set: §f"
-                + luckPermsUtil.getPlayerPrefix(p)
-                + nick
-                + (changeSkin ? " §7(Skin)" : "")
-        );
-    }
+            Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                Main.nick().setNickname(p, nick);
 
-    private Disguise buildDisguise(Player p, String nick, boolean changeSkin) {
+                p.setDisplayName(nick);
+                p.setPlayerListName(nick);
 
-        Disguise.Builder builder = Disguise.builder()
-                .setName(nick)
-                .setEntityType(EntityType.PLAYER);
+                Disguise disguise = Disguise.builder()
+                        .setName(nick)
+                        .setEntityType(EntityType.PLAYER)
+                        .setSkin(SkinAPI.MOJANG, finalSkinUUID)
+                        .build();
 
-        UUID skinUUID = changeSkin ? resolveSkin(p, nick) : p.getUniqueId();
+                provider.disguise(p, disguise);
 
-        builder.setSkin(SkinAPI.MOJANG, skinUUID);
-
-        return builder.build();
+                p.sendMessage(Messages.PREFIX + "§aNick set: §f" + luckPermsUtil.getPlayerPrefix(p) + nick + (changeSkin ? " §7(Skin)" : ""));
+            });
+        });
     }
 
     private UUID resolveSkin(Player p, String nick) {

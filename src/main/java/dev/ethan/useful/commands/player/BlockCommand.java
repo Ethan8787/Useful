@@ -7,11 +7,9 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "block", permission = "guildwars.player.block", description = "Block teleport", override = true)
+@CommandInfo(name = "block", permission = "useful.player.block", description = "Block teleport", override = true)
 public class BlockCommand implements NontageCommand {
-
     private final PlayerBlockingUtil blockingUtil = Main.getInstance().getPlayerBlockingUtil();
-
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return;

@@ -9,26 +9,19 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(
-        name = "unnick",
-        permission = "useful.nick",
-        description = "Remove nickname",
-        override = true
-)
+@CommandInfo(name = "unnick", permission = "useful.nick.use", description = "Remove nickname", override = true)
 public class UnnickCommand implements NontageCommand {
 
     private final DisguiseProvider provider = DisguiseManager.getProvider();
 
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
-
         if (!(sender instanceof Player p)) {
             sender.sendMessage(Messages.PREFIX + "§cOnly players can use this command.");
             return;
         }
 
         String current = Main.nick().getNickname(p);
-
         if (current == null) {
             p.sendMessage(Messages.PREFIX + "§cYou are not nicked.");
             return;

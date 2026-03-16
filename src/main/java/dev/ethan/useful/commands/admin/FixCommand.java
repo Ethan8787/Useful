@@ -1,4 +1,4 @@
-package dev.ethan.useful.commands.player;
+package dev.ethan.useful.commands.admin;
 
 import dev.ethan.useful.constants.Messages;
 import org.bukkit.Material;
@@ -10,7 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "fix", permission = "guildwars.player.fix", description = "Repair item in hand", override = true)
+@CommandInfo(name = "fix", permission = "useful.admin.fix", description = "Repair item in hand", override = true)
 public class FixCommand implements NontageCommand {
 
     @Override

@@ -12,7 +12,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "crash", permission = "guildwars.admin.crash", description = "Crash a player client", override = true)
+@CommandInfo(name = "crash", permission = "useful.admin.crash", description = "Crash a player client", override = true)
 public class CrashCommand implements NontageCommand {
     private final CrashUtil crashUtil = Main.getInstance().getCrashUtil();
     private final LuckPermsUtil luckPermsUtil = Main.getInstance().getLuckPermsUtil();

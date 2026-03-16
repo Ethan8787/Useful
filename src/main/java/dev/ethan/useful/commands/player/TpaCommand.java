@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "tpa", permission = "guildwars.player.tpa", description = "Send teleport request", override = true)
+@CommandInfo(name = "tpa", permission = "useful.player.tpa", description = "Send teleport request", override = true)
 public class TpaCommand implements NontageCommand {
 
     private final TeleportUtil teleportUtil = Main.getInstance().getTeleportUtil();

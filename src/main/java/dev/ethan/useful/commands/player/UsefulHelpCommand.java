@@ -1,4 +1,4 @@
-package dev.ethan.useful.commands.admin;
+package dev.ethan.useful.commands.player;
 
 import dev.ethan.useful.constants.Messages;
 import org.bukkit.command.CommandSender;

@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "reply", permission = "guildwars.player.reply", description = "Reply to last message", override = true)
+@CommandInfo(name = "reply", permission = "useful.player.reply", description = "Reply to last message", override = true)
 public class ReplyCommand implements NontageCommand {
 
     private final MessageUtil messageUtil = Main.getInstance().getMessageUtil();

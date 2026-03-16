@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "blocklist", permission = "guildwars.player.blocklist", description = "Show blocked players", override = true)
+@CommandInfo(name = "blocklist", permission = "useful.player.blocklist", description = "Show blocked players", override = true)
 public class BlocklistCommand implements NontageCommand {
 
     private final PlayerBlockingUtil blockingUtil = Main.getInstance().getPlayerBlockingUtil();

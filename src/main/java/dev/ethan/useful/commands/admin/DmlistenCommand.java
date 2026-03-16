@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "dmlisten", permission = "guildwars.admin.dmlisten", description = "Toggle DM listener", override = true)
+@CommandInfo(name = "dmlisten", permission = "useful.admin.dmlisten", description = "Toggle DM listener", override = true)
 public class DmlistenCommand implements NontageCommand {
     private final MessageUtil messageUtil = Main.getInstance().getMessageUtil();
     @Override

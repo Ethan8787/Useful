@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
-@CommandInfo(name = "home", permission = "guildwars.player.home", description = "Teleport to home", override = true)
+@CommandInfo(name = "home", permission = "useful.player.home", description = "Teleport to home", override = true)
 public class HomeCommand implements NontageCommand {
 
     private final HomeUtil homeUtil = Main.getInstance().getHomeUtil();
