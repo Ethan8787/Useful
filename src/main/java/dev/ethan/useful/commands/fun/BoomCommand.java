@@ -10,9 +10,13 @@ import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.StringUtil;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 @CommandInfo(name = "boom", permission = "useful.fun.boom", description = "Launch a player with firework", override = true)
@@ -77,5 +81,22 @@ public class BoomCommand implements NontageCommand {
         s.sendMessage(Messages.PREFIX + "§aFirework launched for " + luckPermsUtil.getPlayerPrefix(t) + t.getName());
 
         s.playSound(s.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, String label, String[] args, Location location) {
+        List<String> completions = new ArrayList<>();
+        if (args.length == 1) {
+            List<String> targets = new ArrayList<>();
+            targets.add("all");
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (sender instanceof Player sp && !sp.canSee(p)) continue;
+                targets.add(p.getName());
+            }
+            StringUtil.copyPartialMatches(args[0], targets, completions);
+            Collections.sort(completions);
+            return completions;
+        }
+        return completions;
     }
 }

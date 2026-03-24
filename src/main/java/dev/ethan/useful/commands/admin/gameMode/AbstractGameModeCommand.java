@@ -31,12 +31,22 @@ public abstract class AbstractGameModeCommand implements NontageCommand {
             return;
         }
         target.setGameMode(mode);
+        String modeName = getChineseGameModeName(mode);
         if (p.equals(target)) {
-            p.sendMessage(Messages.PREFIX + "§f您的遊戲模式已更新為 §a" + mode.name());
+            p.sendMessage(Messages.PREFIX + "§f您的遊戲模式已更新為 §a" + modeName);
             return;
         }
-        p.sendMessage(Messages.PREFIX + "§f已更新 " + luckPermsUtil.getPlayerPrefix(target) + target.getName() + " §f的遊戲模式為 §a" + mode.name());
-        target.sendMessage(Messages.PREFIX + "§f您的遊戲模式已被更新為 §a" + mode.name());
+        p.sendMessage(Messages.PREFIX + "§f已更新 " + luckPermsUtil.getPlayerPrefix(target) + target.getName() + " §f的遊戲模式為 §a" + modeName);
+        target.sendMessage(Messages.PREFIX + "§f您的遊戲模式已被更新為 §a" + modeName);
+    }
+
+    private String getChineseGameModeName(GameMode mode) {
+        return switch (mode) {
+            case SURVIVAL -> "生存模式";
+            case CREATIVE -> "創造模式";
+            case ADVENTURE -> "冒險模式";
+            case SPECTATOR -> "旁觀模式";
+        };
     }
 
     @Override

@@ -6,8 +6,13 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @CommandInfo(name = "world", permission = "useful.admin.world", description = "Teleport to a world spawn", override = true)
 public class WorldCommand implements NontageCommand {
@@ -25,5 +30,21 @@ public class WorldCommand implements NontageCommand {
         }
         Location loc = w.getSpawnLocation();
         p.teleport(loc);
+        p.sendMessage(Messages.PREFIX + "§a已傳送至世界: §f" + w.getName());
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, String label, String[] args, Location location) {
+        List<String> completions = new ArrayList<>();
+        if (args.length == 1) {
+            List<String> worldNames = new ArrayList<>();
+            for (World world : Bukkit.getWorlds()) {
+                worldNames.add(world.getName());
+            }
+            StringUtil.copyPartialMatches(args[0], worldNames, completions);
+            Collections.sort(completions);
+            return completions;
+        }
+        return completions;
     }
 }

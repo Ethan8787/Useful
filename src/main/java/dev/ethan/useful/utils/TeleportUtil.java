@@ -10,6 +10,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -101,6 +102,26 @@ public class TeleportUtil {
         return null;
     }
 
+    public List<String> getPendingRequesters(Player receiver) {
+        ensureMainThread();
+        UUID receiverId = receiver.getUniqueId();
+        long now = System.currentTimeMillis();
+        Set<String> requesterNames = new HashSet<>();
+        for (Map.Entry<RequestKey, Long> entry : tpaRequests.entrySet()) {
+            if (entry.getKey().receiver.equals(receiverId) && entry.getValue() > now) {
+                OfflinePlayer op = Bukkit.getOfflinePlayer(entry.getKey().requester);
+                if (op.getName() != null) requesterNames.add(op.getName());
+            }
+        }
+        for (Map.Entry<RequestKey, Long> entry : tpahereRequests.entrySet()) {
+            if (entry.getKey().receiver.equals(receiverId) && entry.getValue() > now) {
+                OfflinePlayer op = Bukkit.getOfflinePlayer(entry.getKey().requester);
+                if (op.getName() != null) requesterNames.add(op.getName());
+            }
+        }
+        return new ArrayList<>(requesterNames);
+    }
+
     private boolean removeRequestByNameFromMap(Map<RequestKey, Long> map, UUID receiver, String requesterName) {
         ensureMainThread();
         long now = System.currentTimeMillis();
@@ -164,7 +185,7 @@ public class TeleportUtil {
 
         Component deny = Component.text(" ❌", NamedTextColor.RED).hoverEvent(HoverEvent.showText(Component.text("拒絕", NamedTextColor.RED))).clickEvent(ClickEvent.runCommand("/tpdeny " + sender.getName()));
 
-        Component message = legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(sender) + sender.getDisplayName())).append(Component.text(" 想傳送到你這裡 ", NamedTextColor.GRAY)).append(accept).append(deny);
+        Component message = legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(sender) + sender.getDisplayName())).append(Component.text(" 想傳送到你這裡 ", NamedTextColor.WHITE)).append(accept).append(deny);
 
         target.sendMessage(message);
         sender.sendMessage(Messages.PREFIX + "§f已向 " + luckPermsUtil.getPlayerPrefix(target) + target.getDisplayName() + " §f發送請求");
@@ -239,28 +260,35 @@ public class TeleportUtil {
         if (requester == null || !requester.isOnline()) {
             boolean removed = removeRequestByNameFromMap(tpahereRequests, acc, args[0]) || removeRequestByNameFromMap(tpaRequests, acc, args[0]);
             if (removed) {
-                acceptor.sendMessage(Messages.PREFIX + "§f該玩家不在線上，已清除該請求");
+                acceptor.sendMessage(Messages.PREFIX + "§f該玩家不在線上，已清除請求");
             } else {
-                acceptor.sendMessage(Messages.PREFIX + "§f該玩家沒有對你發送請求或已過期");
+                acceptor.sendMessage(Messages.PREFIX + "§f找不到該請求或已過期");
             }
             return;
         }
 
         UUID req = requester.getUniqueId();
+        String requesterDisplay = luckPermsUtil.getPlayerPrefix(requester) + requester.getDisplayName();
 
         if (hasRequest(tpahereRequests, acc, req)) {
             removeRequest(tpahereRequests, acc, req);
-            delayedTeleport(acceptor, requester.getLocation(), luckPermsUtil.getPlayerPrefix(requester) + requester.getDisplayName());
+            acceptor.sendMessage(legacy(Messages.PREFIX).append(Component.text("已同意來自 ", NamedTextColor.WHITE)).append(legacy(requesterDisplay)).append(Component.text(" 的傳送邀請", NamedTextColor.WHITE)));
+            requester.sendMessage(legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(acceptor) + acceptor.getDisplayName())).append(Component.text(" 同意了你的傳送請求", NamedTextColor.GREEN)));
+            acceptor.playSound(acceptor.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1.2f);
+            delayedTeleport(acceptor, requester.getLocation(), requesterDisplay);
             return;
         }
 
         if (hasRequest(tpaRequests, acc, req)) {
             removeRequest(tpaRequests, acc, req);
+            acceptor.sendMessage(legacy(Messages.PREFIX).append(Component.text("已同意 ", NamedTextColor.WHITE)).append(legacy(requesterDisplay)).append(Component.text(" 傳送到你這裡", NamedTextColor.WHITE)));
+            requester.sendMessage(legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(acceptor) + acceptor.getDisplayName())).append(Component.text(" 同意了你的傳送請求", NamedTextColor.GREEN)));
+            acceptor.playSound(acceptor.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1.2f);
             delayedTeleport(requester, acceptor.getLocation(), luckPermsUtil.getPlayerPrefix(acceptor) + acceptor.getDisplayName());
             return;
         }
 
-        acceptor.sendMessage(Messages.PREFIX + "§f該玩家沒有對你發送請求或已過期");
+        acceptor.sendMessage(Messages.PREFIX + "§f找不到該請求或已過期");
     }
 
     public void handleTpdenyCommand(Player receiver, String[] args) {
@@ -273,37 +301,34 @@ public class TeleportUtil {
 
         UUID rec = receiver.getUniqueId();
         String name = args[0];
-
         Player sender = findOnlinePlayer(name);
-        if (sender != null && sender.isOnline()) {
-            UUID snd = sender.getUniqueId();
 
-            boolean removed = false;
-            if (hasRequest(tpahereRequests, rec, snd)) {
-                removeRequest(tpahereRequests, rec, snd);
+        boolean removed = false;
+        UUID sndId = (sender != null) ? sender.getUniqueId() : null;
+
+        if (sndId != null) {
+            if (hasRequest(tpahereRequests, rec, sndId)) {
+                removeRequest(tpahereRequests, rec, sndId);
                 removed = true;
-            } else if (hasRequest(tpaRequests, rec, snd)) {
-                removeRequest(tpaRequests, rec, snd);
+            } else if (hasRequest(tpaRequests, rec, sndId)) {
+                removeRequest(tpaRequests, rec, sndId);
                 removed = true;
             }
-
-            if (!removed) {
-                receiver.sendMessage(Messages.PREFIX + "§f該玩家沒有對你發送請求或已過期");
-                return;
-            }
-
-            sender.sendMessage(Messages.PREFIX + luckPermsUtil.getPlayerPrefix(receiver) + receiver.getDisplayName() + " §f拒絕了你的請求");
-            receiver.sendMessage(Messages.PREFIX + "§f你已拒絕請求");
-            return;
+        } else {
+            removed = removeRequestByNameFromMap(tpahereRequests, rec, name) || removeRequestByNameFromMap(tpaRequests, rec, name);
         }
 
-        boolean removed = removeRequestByNameFromMap(tpahereRequests, rec, name) || removeRequestByNameFromMap(tpaRequests, rec, name);
         if (!removed) {
-            receiver.sendMessage(Messages.PREFIX + "§f該玩家沒有對你發送請求或已過期");
+            receiver.sendMessage(Messages.PREFIX + "§f找不到該請求或已過期");
             return;
         }
 
-        receiver.sendMessage(Messages.PREFIX + "§f你已拒絕請求");
+        receiver.sendMessage(legacy(Messages.PREFIX).append(Component.text("你已拒絕來自 ", NamedTextColor.WHITE)).append(Component.text(name, NamedTextColor.WHITE)).append(Component.text(" 的請求", NamedTextColor.WHITE)));
+
+        if (sender != null && sender.isOnline()) {
+            sender.sendMessage(legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(receiver) + receiver.getDisplayName())).append(Component.text(" 拒絕了你的傳送請求", NamedTextColor.RED)));
+            sender.playSound(sender.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.5f);
+        }
     }
 
     public void delayedTeleport(Player player, Location target, String name) {
@@ -315,7 +340,7 @@ public class TeleportUtil {
             Bukkit.getScheduler().cancelTask(prev);
         }
 
-        player.sendMessage(Messages.PREFIX + "§f將在 §e" + TELEPORT_DELAY_SEC + " 秒 §f後傳送到 §a" + name + " §f請不要移動..");
+        player.sendMessage(Messages.PREFIX + "§f將在 §e" + TELEPORT_DELAY_SEC + " 秒 §f後傳送到 §a" + name);
 
         final int[] myTaskId = new int[1];
 

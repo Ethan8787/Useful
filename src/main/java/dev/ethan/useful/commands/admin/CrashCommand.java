@@ -7,15 +7,23 @@ import dev.ethan.useful.constants.Messages;
 import dev.ethan.useful.utils.CrashUtil;
 import dev.ethan.useful.utils.LuckPermsUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @CommandInfo(name = "crash", permission = "useful.admin.crash", description = "Crash a player client", override = true)
 public class CrashCommand implements NontageCommand {
     private final CrashUtil crashUtil = Main.getInstance().getCrashUtil();
     private final LuckPermsUtil luckPermsUtil = Main.getInstance().getLuckPermsUtil();
+
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player s)) return;
@@ -49,5 +57,23 @@ public class CrashCommand implements NontageCommand {
             }
         }
         s.sendMessage(Messages.PREFIX + "§a已嘗試使用 §f" + method + " §a作用於 " + luckPermsUtil.getPlayerPrefix(t) + t.getName());
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, String label, String[] args, Location location) {
+        List<String> completions = new ArrayList<>();
+        if (args.length == 1) {
+            List<String> methods = Arrays.asList("explosion", "particle", "position", "nuke");
+            StringUtil.copyPartialMatches(args[0], methods, completions);
+        } else if (args.length == 2) {
+            List<String> names = new ArrayList<>();
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (sender instanceof Player sp && !sp.canSee(p)) continue;
+                names.add(p.getName());
+            }
+            StringUtil.copyPartialMatches(args[1], names, completions);
+        }
+        Collections.sort(completions);
+        return completions;
     }
 }

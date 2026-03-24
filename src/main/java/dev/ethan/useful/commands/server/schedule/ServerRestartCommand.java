@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 
 @CommandInfo(name = "serverrestart", permission = "useful.console.serverrestart", description = "Schedule server restart", override = true)
 public class ServerRestartCommand implements NontageCommand {
@@ -79,6 +80,26 @@ public class ServerRestartCommand implements NontageCommand {
         sender.sendMessage(Messages.PREFIX + "§a已排程重啟：§f" + scheduledAt.format(OUT_FMT));
     }
 
+    @Override
+    public List<String> onTabComplete(CommandSender sender, String label, String[] args, org.bukkit.Location location) {
+        java.util.List<String> completions = new java.util.ArrayList<>();
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+
+        if (args.length == 1) {
+            String today = now.format(java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+            org.bukkit.util.StringUtil.copyPartialMatches(args[0], java.util.Collections.singletonList(today), completions);
+            return completions;
+        }
+
+        if (args.length == 2) {
+            String timeSuggestion = now.plusHours(1).format(java.time.format.DateTimeFormatter.ofPattern("HH:00:00"));
+            org.bukkit.util.StringUtil.copyPartialMatches(args[1], java.util.Collections.singletonList(timeSuggestion), completions);
+            return completions;
+        }
+
+        return completions;
+    }
+
     private void startRestartCountdown(long totalSeconds) {
         cancelCountdown();
 
@@ -90,11 +111,11 @@ public class ServerRestartCommand implements NontageCommand {
             public void run() {
                 boolean shouldShow = sec <= 60 || sec % 60 == 0 || sec == 30 || sec == 10 || sec <= 5;
                 if (shouldShow) {
-                    String subtitle = "§7將在§f" + sec + "§7秒後執行";
+                    String subtitle = "§7將在§f " + sec + " §7秒後執行";
                     sendTitleAll(title, subtitle, 0, 25, 5);
                 }
 
-                if (sec <= 1) {
+                if (sec < 1) {
                     cancelCountdown();
                     doRestart();
                     return;

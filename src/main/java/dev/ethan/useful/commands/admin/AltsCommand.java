@@ -3,8 +3,10 @@ package dev.ethan.useful.commands.admin;
 import dev.ethan.useful.Main;
 import dev.ethan.useful.constants.Messages;
 import dev.ethan.useful.utils.IPTrackerUtil;
+import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
@@ -13,6 +15,7 @@ import java.util.*;
 @CommandInfo(name = "alts", permission = "useful.admin.alts", description = "Check alternate accounts by IP", override = true)
 public class AltsCommand implements NontageCommand {
     private final IPTrackerUtil ipTrackerUtil = Main.getInstance().getIPTrackerUtil();
+
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player p)) return;
@@ -46,5 +49,17 @@ public class AltsCommand implements NontageCommand {
         } else {
             p.sendMessage(Messages.PREFIX + "§f" + String.join("§7, §f", alts));
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, String label, String[] args, Location location) {
+        List<String> completions = new ArrayList<>();
+        if (args.length == 1) {
+            Set<String> allRecordedPlayers = ipTrackerUtil.ipsConfig.getKeys(false);
+            StringUtil.copyPartialMatches(args[0], allRecordedPlayers, completions);
+            Collections.sort(completions);
+            return completions;
+        }
+        return completions;
     }
 }

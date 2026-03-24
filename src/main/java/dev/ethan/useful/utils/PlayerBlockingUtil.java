@@ -52,6 +52,21 @@ public class PlayerBlockingUtil {
         return removed;
     }
 
+    public List<String> getBlockedNames(UUID blocker) {
+        Set<UUID> set = blocks.get(blocker);
+        if (set == null || set.isEmpty()) return Collections.emptyList();
+
+        List<String> names = new ArrayList<>();
+        for (UUID u : set) {
+            OfflinePlayer op = Bukkit.getOfflinePlayer(u);
+            String name = op.getName();
+            if (name != null) {
+                names.add(name);
+            }
+        }
+        return names;
+    }
+
     public Set<UUID> getBlocked(UUID blocker) {
         Set<UUID> set = blocks.get(blocker);
         if (set == null) return Collections.emptySet();

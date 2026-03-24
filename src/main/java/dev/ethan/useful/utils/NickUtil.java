@@ -41,7 +41,9 @@ public class NickUtil {
                 for (String uuidStr : config.getConfigurationSection("nicks").getKeys(false)) {
                     String nick = config.getString("nicks." + uuidStr + ".nickname");
                     if (nick != null) {
-                        nicknameCache.put(UUID.fromString(uuidStr), nick);
+                        try {
+                            nicknameCache.put(UUID.fromString(uuidStr), nick);
+                        } catch (IllegalArgumentException ignored) {}
                     }
                 }
             }
@@ -49,17 +51,15 @@ public class NickUtil {
         plugin.getLogger().info("Nicknames loaded: " + nicknameCache.size());
     }
 
-    private void saveAsync() {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-            synchronized (lock) {
-                try {
-                    config.save(nickFile);
-                } catch (IOException e) {
-                    plugin.getLogger().severe("Failed to save nicknames.yml");
-                    e.printStackTrace();
-                }
+    private void save() {
+        synchronized (lock) {
+            try {
+                config.save(nickFile);
+            } catch (IOException e) {
+                plugin.getLogger().severe("Failed to save nicknames.yml");
+                e.printStackTrace();
             }
-        });
+        }
     }
 
     public void setNickname(Player player, String nickname) {
@@ -68,8 +68,8 @@ public class NickUtil {
         synchronized (lock) {
             config.set("nicks." + uuid + ".nickname", nickname);
             config.set("nicks." + uuid + ".last_update", System.currentTimeMillis());
+            save();
         }
-        saveAsync();
     }
 
     public void removeNickname(Player player) {
@@ -77,8 +77,8 @@ public class NickUtil {
         nicknameCache.remove(uuid);
         synchronized (lock) {
             config.set("nicks." + uuid, null);
+            save();
         }
-        saveAsync();
     }
 
     public String getNickname(Player player) {
@@ -86,17 +86,11 @@ public class NickUtil {
     }
 
     public String getNicknameOrDefault(Player player) {
-        return getNickname(player) != null ? getNickname(player) : player.getName();
+        String nick = nicknameCache.get(player.getUniqueId());
+        return nick != null ? nick : player.getName();
     }
 
     public void close() {
-        synchronized (lock) {
-            try {
-                config.save(nickFile);
-            } catch (IOException e) {
-                plugin.getLogger().severe("Failed to save nicknames.yml on shutdown");
-                e.printStackTrace();
-            }
-        }
+        save();
     }
 }

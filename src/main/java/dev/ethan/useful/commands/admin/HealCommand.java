@@ -1,21 +1,21 @@
-/*
-目的：
-1) /heal 完全治癒時同時解除燃燒 (fire ticks = 0)
-2) 支援：/heal、/heal *、/heal <數值>、/heal <玩家>
-*/
 package dev.ethan.useful.commands.admin;
 
 import dev.ethan.useful.Main;
 import dev.ethan.useful.constants.Messages;
 import dev.ethan.useful.utils.LuckPermsUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 import top.nontage.nontagelib.annotations.CommandInfo;
 import top.nontage.nontagelib.command.NontageCommand;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 @CommandInfo(name = "heal", permission = "useful.admin.heal", description = "Heal yourself or others", override = true)
@@ -76,6 +76,27 @@ public class HealCommand implements NontageCommand {
     private void healFull(Player target) {
         target.setHealth(Objects.requireNonNull(target.getAttribute(Attribute.MAX_HEALTH)).getValue());
         target.setFoodLevel(20);
+        target.setSaturation(20.0F);
         target.setFireTicks(0);
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, String label, String[] args, Location location) {
+        List<String> completions = new ArrayList<>();
+        if (args.length == 1) {
+            List<String> targets = new ArrayList<>();
+            targets.add("*");
+            if (sender instanceof Player p) {
+                targets.add(String.valueOf((int) Objects.requireNonNull(p.getAttribute(Attribute.MAX_HEALTH)).getValue()));
+            }
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (sender instanceof Player sp && !sp.canSee(p)) continue;
+                targets.add(p.getName());
+            }
+            StringUtil.copyPartialMatches(args[0], targets, completions);
+            Collections.sort(completions);
+            return completions;
+        }
+        return completions;
     }
 }

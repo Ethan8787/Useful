@@ -78,14 +78,10 @@ public class PlayerJoinQuitListener implements Listener {
 
                     Disguise d = Disguise.builder()
                             .setName(nick)
-                            .setEntityType(EntityType.PLAYER)
                             .setSkin(SkinAPI.MOJANG, finalSkinUUID)
                             .build();
 
                     DisguiseManager.getProvider().disguise(p, d);
-
-                    p.setDisplayName(nick);
-                    p.setPlayerListName(nick);
                     p.setMetadata("nicked", new FixedMetadataValue(Main.getInstance(), true));
                 });
             });

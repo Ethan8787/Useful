@@ -17,6 +17,7 @@ import top.nontage.nontagelib.command.NontageCommand;
 
 import java.util.UUID;
 
+//todo: Fix nick not working properly
 @CommandInfo(name = "nick", permission = "useful.nick.use", description = "Change nickname", override = true)
 public class NickCommand implements NontageCommand {
 
@@ -54,12 +55,8 @@ public class NickCommand implements NontageCommand {
             Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
                 Main.nick().setNickname(p, nick);
 
-                p.setDisplayName(nick);
-                p.setPlayerListName(nick);
-
                 Disguise disguise = Disguise.builder()
                         .setName(nick)
-                        .setEntityType(EntityType.PLAYER)
                         .setSkin(SkinAPI.MOJANG, finalSkinUUID)
                         .build();
 
