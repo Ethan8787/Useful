@@ -56,6 +56,13 @@ public class PlaceHolderManager extends PlaceholderExpansion {
                         + formatGradient(String.format("%.1fG", maxGB), "#55FF55", "#00AA00");
             }
 
+            case "real_health" -> {
+                double currentHealth = p.getHealth();
+                double absorption = p.getAbsorptionAmount();
+                double total = currentHealth + absorption;
+                return String.format("%.1f", total);
+            }
+
             case "tps" -> {
                 double tps = Bukkit.getServer().getTPS()[0];
                 Color from, to;

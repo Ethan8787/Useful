@@ -40,16 +40,6 @@ public class PlayerUtil {
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 1f, 1.5f);
     }
 
-    public boolean canShoot(Player p) {
-        long now = System.currentTimeMillis();
-        long last = gameManager.getLastShootTime(p.getUniqueId());
-        if (now - last < gameManager.SHOOT_COOLDOWN_MS) {
-            return false;
-        }
-        gameManager.setLastShootTime(p.getUniqueId(), now);
-        return true;
-    }
-
     public boolean isVanished(Player player) {
         for (MetadataValue meta : player.getMetadata("vanished")) {
             if (meta.asBoolean()) return true;

@@ -9,6 +9,7 @@ import dev.ethan.useful.utils.PlayerUtil;
 import dev.iiahmed.disguise.Disguise;
 import dev.iiahmed.disguise.DisguiseManager;
 import dev.iiahmed.disguise.SkinAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -35,52 +36,64 @@ public class PlayerJoinQuitListener implements Listener {
         String prefix = luckPermsUtil.getPlayerPrefix(p);
         String suffix = luckPermsUtil.getPlayerSuffix(p);
         String nick = Main.nick().getNickname(p);
-        String firstjoin = "§8[§d+§8] " + prefix + p.getDisplayName() + suffix;
-        String join = "§8[§a+§8] " + prefix + p.getDisplayName() + suffix;
-        String actionbar = "§d» §f歡迎回來 " + prefix + p.getDisplayName() + suffix + " §d«";
+
         String playerName = p.getName();
         String ipAddress = Objects.requireNonNull(p.getAddress()).getAddress().getHostAddress();
         List<String> ipList = ipTrackerUtil.ipsConfig.getStringList(playerName);
+
         if (messageUtil.getConfig().getBoolean("listeners." + uuid, false)) {
             messageUtil.addDmListener(p);
             p.sendMessage(Messages.PREFIX + "§a您仍在監聽私訊。");
         }
+
         if (!ipList.contains(ipAddress)) {
             ipList.add(ipAddress);
         }
+
         if (p.isOp()) {
             p.playSound(p.getLocation(), Sound.ENTITY_GUARDIAN_DEATH, 1.0f, 1.0f);
         } else {
             p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
         }
+
         ipTrackerUtil.ipsConfig.set(playerName, ipList);
         ipTrackerUtil.save();
+
         if (nick != null) {
-            UUID skinUUID;
-            try {
-                skinUUID = playerUtil.getUUID(nick);
-            } catch (Exception ex) {
-                skinUUID = null;
-            }
-            Disguise d = Disguise.builder()
-                    .setName(nick)
-                    .setSkin(SkinAPI.MOJANG, Objects.requireNonNullElseGet(skinUUID, p::getUniqueId))
-                    .setEntityType(EntityType.PLAYER)
-                    .build();
-            DisguiseManager.getProvider().disguise(p, d);
-            p.setDisplayName(nick);
-            p.setPlayerListName(nick);
-            p.setMetadata("nicked", new FixedMetadataValue(Main.getInstance(), true));
             e.setJoinMessage("§8[§d+§8] " + prefix + nick + suffix);
             p.sendActionBar("§d» §f歡迎回來 " + prefix + nick + suffix + " §d«");
+
+            Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+                UUID skinUUID;
+                try {
+                    skinUUID = playerUtil.getUUID(nick);
+                } catch (Exception ex) {
+                    skinUUID = null;
+                }
+
+                final UUID finalSkinUUID = (skinUUID != null) ? skinUUID : p.getUniqueId();
+
+                Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                    if (!p.isOnline()) return;
+
+                    Disguise d = Disguise.builder()
+                            .setName(nick)
+                            .setSkin(SkinAPI.MOJANG, finalSkinUUID)
+                            .build();
+
+                    DisguiseManager.getProvider().disguise(p, d);
+                    p.setMetadata("nicked", new FixedMetadataValue(Main.getInstance(), true));
+                });
+            });
             return;
         }
+
         if (p.hasPlayedBefore()) {
-            e.setJoinMessage(join);
+            e.setJoinMessage("§8[§a+§8] " + prefix + p.getDisplayName() + suffix);
         } else {
-            e.setJoinMessage(firstjoin);
+            e.setJoinMessage("§8[§d+§8] " + prefix + p.getDisplayName() + suffix);
         }
-        p.sendActionBar(actionbar);
+        p.sendActionBar("§d» §f歡迎回來 " + prefix + p.getDisplayName() + suffix + " §d«");
     }
 
     @EventHandler
