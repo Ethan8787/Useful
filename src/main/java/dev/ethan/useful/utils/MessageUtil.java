@@ -20,7 +20,7 @@ import java.util.*;
 public class MessageUtil {
     private final JavaPlugin plugin;
     private final LuckPermsUtil luckPerms = Main.getInstance().getLuckPermsUtil();
-    private final TeleportUtil teleport = Main.getInstance().getTeleportUtil();
+    private final PlayerBlockingUtil block = Main.getInstance().getPlayerBlockingUtil();
 
     private File file;
     private FileConfiguration config;
@@ -82,7 +82,7 @@ public class MessageUtil {
     }
 
     public void sendMessage(Player sender, Player receiver, String msg) {
-        if (teleport.isBlocked(receiver.getUniqueId(), sender.getUniqueId())) {
+        if (block.isBlocked(receiver.getUniqueId(), sender.getUniqueId())) {
             sender.sendMessage(Messages.PREFIX + "§c你無法發送私訊給 "
                     + luckPerms.getPlayerPrefix(receiver) + receiver.getName()
                     + "，對方已封鎖你");
