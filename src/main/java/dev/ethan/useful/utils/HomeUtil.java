@@ -126,11 +126,26 @@ public class HomeUtil {
             player.sendMessage(Messages.PREFIX + "§c家不存在: " + name);
             return;
         }
-        Location loc = new Location(Bukkit.getWorld(
-                homesConfig.getString(path + ".world")),
+
+        String worldName = homesConfig.getString(path + ".world");
+        if (worldName == null || Bukkit.getWorld(worldName) == null) {
+            player.sendMessage(Messages.PREFIX + "§c家所在的環境不存在");
+            return;
+        }
+
+        Location loc = new Location(
+                Bukkit.getWorld(worldName),
                 homesConfig.getDouble(path + ".x"),
                 homesConfig.getDouble(path + ".y"),
-                homesConfig.getDouble(path + ".z"));
+                homesConfig.getDouble(path + ".z")
+        );
+
+        Component cancelBtn = text(" §7取消")
+                .hoverEvent(HoverEvent.showText(text("取消傳送", NamedTextColor.RED)))
+                .clickEvent(ClickEvent.runCommand("/tpcancel"));
+
+        player.sendMessage(text(Messages.PREFIX).append(text("準備傳送中...", NamedTextColor.WHITE)).append(cancelBtn));
+
         teleportUtil.delayedTeleport(player, loc, name);
     }
 

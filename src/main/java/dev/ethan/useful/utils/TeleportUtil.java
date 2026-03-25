@@ -18,6 +18,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static net.kyori.adventure.text.Component.text;
+
 public class TeleportUtil {
 
     private void ensureMainThread() {
@@ -39,7 +41,7 @@ public class TeleportUtil {
     private final Map<RequestKey, Long> tpaRequests = new ConcurrentHashMap<>();
     private final Map<RequestKey, Long> tpahereRequests = new ConcurrentHashMap<>();
     private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
-    private final Map<UUID, Integer> pendingTeleports = new ConcurrentHashMap<>();
+    private final Map<UUID, TeleportSession> pendingTeleports = new ConcurrentHashMap<>();
 
     public TeleportUtil(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -149,7 +151,7 @@ public class TeleportUtil {
         long next = cooldowns.getOrDefault(sender.getUniqueId(), 0L);
         if (now < next) {
             long sec = Math.max(1, (next - now + 999) / 1000);
-            sender.sendMessage(Messages.PREFIX + "§f冷卻中，請等待 " + sec + " 秒");
+            sender.sendMessage(Messages.PREFIX + "§f請等待 §e" + sec + " §f秒" + "§7(冷卻中)");
             return false;
         }
         cooldowns.put(sender.getUniqueId(), now + COOLDOWN_MS);
@@ -171,7 +173,7 @@ public class TeleportUtil {
             return;
         }
         if (target.equals(sender)) {
-            sender.sendMessage(Messages.PREFIX + "§f不能傳送到自己");
+            sender.sendMessage(Messages.PREFIX + "§f無法傳送自己");
             return;
         }
         if (blockingUtil.isBlocked(target.getUniqueId(), sender.getUniqueId())) {
@@ -182,13 +184,22 @@ public class TeleportUtil {
         addRequest(tpaRequests, target.getUniqueId(), sender.getUniqueId());
 
         Component accept = Component.text("✔", NamedTextColor.GREEN).hoverEvent(HoverEvent.showText(Component.text("同意", NamedTextColor.GREEN))).clickEvent(ClickEvent.runCommand("/tpaccept " + sender.getName()));
-
         Component deny = Component.text(" ❌", NamedTextColor.RED).hoverEvent(HoverEvent.showText(Component.text("拒絕", NamedTextColor.RED))).clickEvent(ClickEvent.runCommand("/tpdeny " + sender.getName()));
 
         Component message = legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(sender) + sender.getDisplayName())).append(Component.text(" 想傳送到你這裡 ", NamedTextColor.WHITE)).append(accept).append(deny);
-
         target.sendMessage(message);
-        sender.sendMessage(Messages.PREFIX + "§f已向 " + luckPermsUtil.getPlayerPrefix(target) + target.getDisplayName() + " §f發送請求");
+
+        Component cancelBtn = text(" §7| §c取消")
+                .hoverEvent(HoverEvent.showText(text("撤回請求", NamedTextColor.RED)))
+                .clickEvent(ClickEvent.runCommand("/tpcancel"));
+
+        Component successMsg = legacy(Messages.PREFIX)
+                .append(text("已向 ", NamedTextColor.WHITE))
+                .append(legacy(luckPermsUtil.getPlayerPrefix(target) + target.getDisplayName()))
+                .append(text(" 發送請求", NamedTextColor.WHITE))
+                .append(cancelBtn);
+
+        sender.sendMessage(successMsg);
     }
 
     public void handleTpahereCommand(Player sender, String[] args) {
@@ -234,16 +245,25 @@ public class TeleportUtil {
             addRequest(tpahereRequests, target.getUniqueId(), sender.getUniqueId());
 
             Component accept = Component.text("✔", NamedTextColor.GREEN).hoverEvent(HoverEvent.showText(Component.text("同意", NamedTextColor.GREEN))).clickEvent(ClickEvent.runCommand("/tpaccept " + sender.getName()));
-
             Component deny = Component.text(" ❌", NamedTextColor.RED).hoverEvent(HoverEvent.showText(Component.text("拒絕", NamedTextColor.RED))).clickEvent(ClickEvent.runCommand("/tpdeny " + sender.getName()));
 
-            Component message = legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(sender) + sender.getDisplayName())).append(Component.text(" 想把你傳送到他那裡 ", NamedTextColor.GRAY)).append(accept).append(deny);
-
+            Component message = legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(sender) + sender.getDisplayName())).append(Component.text(" 想把你傳送到他那裡 ", NamedTextColor.WHITE)).append(accept).append(deny);
             target.sendMessage(message);
             sent++;
         }
 
-        sender.sendMessage(Messages.PREFIX + "§f已向 " + sent + " §f位玩家發送傳送請求" + (skipped > 0 ? "，其中 " + skipped + " §f位玩家已封鎖你，已略過" : ""));
+        Component cancelBtn = text(" §7| §c取消")
+                .hoverEvent(HoverEvent.showText(text("撤回所有請求", NamedTextColor.RED)))
+                .clickEvent(ClickEvent.runCommand("/tpcancel"));
+
+        Component resultMsg = legacy(Messages.PREFIX)
+                .append(text("已向 ", NamedTextColor.WHITE))
+                .append(text(sent, NamedTextColor.YELLOW))
+                .append(text(" 位玩家發送傳送請求", NamedTextColor.WHITE))
+                .append(text(skipped > 0 ? " (已略過 " + skipped + " 位)" : "", NamedTextColor.GRAY))
+                .append(cancelBtn);
+
+        sender.sendMessage(resultMsg);
     }
 
     public void handleTpacceptCommand(Player acceptor, String[] args) {
@@ -270,21 +290,25 @@ public class TeleportUtil {
         UUID req = requester.getUniqueId();
         String requesterDisplay = luckPermsUtil.getPlayerPrefix(requester) + requester.getDisplayName();
 
+        Component cancelBtn = text(" §7| §c取消")
+                .hoverEvent(HoverEvent.showText(Component.text("取消傳送", NamedTextColor.RED)))
+                .clickEvent(ClickEvent.runCommand("/tpcancel"));
+
         if (hasRequest(tpahereRequests, acc, req)) {
             removeRequest(tpahereRequests, acc, req);
-            acceptor.sendMessage(legacy(Messages.PREFIX).append(Component.text("已同意來自 ", NamedTextColor.WHITE)).append(legacy(requesterDisplay)).append(Component.text(" 的傳送邀請", NamedTextColor.WHITE)));
-            requester.sendMessage(legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(acceptor) + acceptor.getDisplayName())).append(Component.text(" 同意了你的傳送請求", NamedTextColor.GREEN)));
+            acceptor.sendMessage(legacy(Messages.PREFIX).append(Component.text("已同意來自 ", NamedTextColor.WHITE)).append(legacy(requesterDisplay)).append(Component.text(" 的傳送邀請", NamedTextColor.WHITE)).append(cancelBtn));
+            requester.sendMessage(legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(acceptor) + acceptor.getDisplayName())).append(Component.text(" 同意了你的傳送請求", NamedTextColor.WHITE)).append(cancelBtn));
             acceptor.playSound(acceptor.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1.2f);
-            delayedTeleport(acceptor, requester.getLocation(), requesterDisplay);
+            delayedTeleport(acceptor, requester);
             return;
         }
 
         if (hasRequest(tpaRequests, acc, req)) {
             removeRequest(tpaRequests, acc, req);
-            acceptor.sendMessage(legacy(Messages.PREFIX).append(Component.text("已同意 ", NamedTextColor.WHITE)).append(legacy(requesterDisplay)).append(Component.text(" 傳送到你這裡", NamedTextColor.WHITE)));
-            requester.sendMessage(legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(acceptor) + acceptor.getDisplayName())).append(Component.text(" 同意了你的傳送請求", NamedTextColor.GREEN)));
+            acceptor.sendMessage(legacy(Messages.PREFIX).append(Component.text("已同意 ", NamedTextColor.WHITE)).append(legacy(requesterDisplay)).append(Component.text(" 傳送到你這裡", NamedTextColor.WHITE)).append(cancelBtn));
+            requester.sendMessage(legacy(Messages.PREFIX).append(legacy(luckPermsUtil.getPlayerPrefix(acceptor) + acceptor.getDisplayName())).append(Component.text(" 同意了你的傳送請求", NamedTextColor.WHITE)).append(cancelBtn));
             acceptor.playSound(acceptor.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1.2f);
-            delayedTeleport(requester, acceptor.getLocation(), luckPermsUtil.getPlayerPrefix(acceptor) + acceptor.getDisplayName());
+            delayedTeleport(requester, acceptor);
             return;
         }
 
@@ -331,16 +355,135 @@ public class TeleportUtil {
         }
     }
 
-    public void delayedTeleport(Player player, Location target, String name) {
+    public void handleTpcancelCommand(Player canceller, String[] args) {
         ensureMainThread();
 
-        UUID pid = player.getUniqueId();
-        Integer prev = pendingTeleports.remove(pid);
-        if (prev != null) {
-            Bukkit.getScheduler().cancelTask(prev);
+        UUID cid = canceller.getUniqueId();
+        TeleportSession sessionToCancel = null;
+
+        for (TeleportSession session : pendingTeleports.values()) {
+            if (session.teleporter.equals(cid) || session.target.equals(cid)) {
+                sessionToCancel = session;
+                break;
+            }
         }
 
-        player.sendMessage(Messages.PREFIX + "§f將在 §e" + TELEPORT_DELAY_SEC + " 秒 §f後傳送到 §a" + name);
+        if (sessionToCancel != null) {
+            Bukkit.getScheduler().cancelTask(sessionToCancel.taskId);
+            pendingTeleports.remove(sessionToCancel.teleporter);
+
+            Player teleporter = Bukkit.getPlayer(sessionToCancel.teleporter);
+            Player target = Bukkit.getPlayer(sessionToCancel.target);
+
+            if (teleporter != null) teleporter.sendMessage(Messages.PREFIX + "§c傳送已取消");
+            if (target != null && !target.equals(teleporter)) target.sendMessage(Messages.PREFIX + "§c傳送已取消");
+            return;
+        }
+
+        boolean requestRemoved = false;
+        Set<UUID> notifiedReceivers = new HashSet<>();
+        String cancellerDisplay = luckPermsUtil.getPlayerPrefix(canceller) + canceller.getDisplayName();
+
+        var it1 = tpaRequests.entrySet().iterator();
+        while (it1.hasNext()) {
+            var entry = it1.next();
+            if (entry.getKey().requester.equals(cid)) {
+                notifiedReceivers.add(entry.getKey().receiver);
+                it1.remove();
+                requestRemoved = true;
+            }
+        }
+
+        var it2 = tpahereRequests.entrySet().iterator();
+        while (it2.hasNext()) {
+            var entry = it2.next();
+            if (entry.getKey().requester.equals(cid)) {
+                notifiedReceivers.add(entry.getKey().receiver);
+                it2.remove();
+                requestRemoved = true;
+            }
+        }
+
+        if (requestRemoved) {
+            canceller.sendMessage(Messages.PREFIX + "§c已撤回發出的傳送請求");
+
+            for (UUID receiverId : notifiedReceivers) {
+                Player receiver = Bukkit.getPlayer(receiverId);
+                if (receiver != null && receiver.isOnline()) {
+                    receiver.sendMessage(legacy(Messages.PREFIX)
+                            .append(legacy(cancellerDisplay))
+                            .append(text(" 撤回了傳送請求", NamedTextColor.RED)));
+                }
+            }
+        } else {
+            canceller.sendMessage(Messages.PREFIX + "§f你目前沒有正在進行的傳送或請求");
+        }
+    }
+
+    public void delayedTeleport(Player teleporter, Location targetLoc, String destinationName) {
+        ensureMainThread();
+        UUID teleporterId = teleporter.getUniqueId();
+        UUID targetId = teleporterId;
+        TeleportSession prev = pendingTeleports.remove(teleporterId);
+        if (prev != null) {
+            Bukkit.getScheduler().cancelTask(prev.taskId);
+        }
+        final int[] myTaskId = new int[1];
+        BukkitRunnable runner = new BukkitRunnable() {
+            int count = TELEPORT_DELAY_SEC;
+
+            @Override
+            public void run() {
+                if (!teleporter.isOnline()) {
+                    pendingTeleports.remove(teleporterId);
+                    cancel();
+                    return;
+                }
+                TeleportSession cur = pendingTeleports.get(teleporterId);
+                if (cur == null || cur.taskId != myTaskId[0]) {
+                    cancel();
+                    return;
+                }
+                if (count <= 0) {
+                    teleporter.teleport(targetLoc);
+                    teleporter.sendMessage(Messages.PREFIX + "§a已傳送到 §f" + destinationName);
+                    pendingTeleports.remove(teleporterId);
+                    cancel();
+                    return;
+                }
+
+                Component cancelBtn = text(" §7| §c取消")
+                        .hoverEvent(HoverEvent.showText(text("點擊取消傳送", NamedTextColor.RED)))
+                        .clickEvent(ClickEvent.runCommand("/tpcancel"));
+
+                Component countdownMsg = legacy(Messages.PREFIX)
+                        .append(text("將在 ", NamedTextColor.WHITE))
+                        .append(text(count, NamedTextColor.YELLOW))
+                        .append(text(" 秒後傳送到 ", NamedTextColor.WHITE))
+                        .append(text(destinationName, NamedTextColor.GREEN))
+                        .append(cancelBtn);
+
+                teleporter.sendMessage(countdownMsg);
+                count--;
+            }
+        };
+
+        int id = runner.runTaskTimer(plugin, 0L, 20L).getTaskId();
+        myTaskId[0] = id;
+        pendingTeleports.put(teleporterId, new TeleportSession(id, teleporterId, targetId));
+    }
+
+    public void delayedTeleport(Player teleporter, Player targetPlayer) {
+        ensureMainThread();
+
+        UUID teleporterId = teleporter.getUniqueId();
+        UUID targetId = targetPlayer.getUniqueId();
+        String targetNameRaw = luckPermsUtil.getPlayerPrefix(targetPlayer) + targetPlayer.getDisplayName();
+
+        TeleportSession prev = pendingTeleports.remove(teleporterId);
+        if (prev != null) {
+            Bukkit.getScheduler().cancelTask(prev.taskId);
+        }
 
         final int[] myTaskId = new int[1];
 
@@ -349,35 +492,58 @@ public class TeleportUtil {
 
             @Override
             public void run() {
-                if (!player.isOnline()) {
-                    Integer cur = pendingTeleports.get(pid);
-                    if (cur != null && cur == myTaskId[0]) pendingTeleports.remove(pid);
+                if (!teleporter.isOnline() || !targetPlayer.isOnline()) {
+                    TeleportSession cur = pendingTeleports.get(teleporterId);
+                    if (cur != null && cur.taskId == myTaskId[0]) pendingTeleports.remove(teleporterId);
                     cancel();
                     return;
                 }
 
-                Integer cur = pendingTeleports.get(pid);
-                if (cur == null || cur != myTaskId[0]) {
+                TeleportSession cur = pendingTeleports.get(teleporterId);
+                if (cur == null || cur.taskId != myTaskId[0]) {
                     cancel();
                     return;
                 }
 
                 if (count <= 0) {
-                    player.teleport(target);
-                    player.sendMessage(Messages.PREFIX + "§a已傳送到 §f" + name);
-                    pendingTeleports.remove(pid);
+                    teleporter.teleport(targetPlayer.getLocation());
+                    teleporter.sendMessage(Messages.PREFIX + "§a已傳送到 §f" + targetNameRaw);
+                    pendingTeleports.remove(teleporterId);
                     cancel();
                     return;
                 }
 
-                player.sendMessage("§7將在 §e" + count + "§7 秒後傳送..");
+                Component cancelBtn = text(" §7| §c取消")
+                        .hoverEvent(HoverEvent.showText(text("點擊取消傳送", NamedTextColor.RED)))
+                        .clickEvent(ClickEvent.runCommand("/tpcancel"));
+
+                Component countdownMsg = legacy(Messages.PREFIX)
+                        .append(text("將在 ", NamedTextColor.WHITE))
+                        .append(text(count, NamedTextColor.YELLOW))
+                        .append(text(" 秒後傳送到 ", NamedTextColor.WHITE))
+                        .append(legacy(targetNameRaw))
+                        .append(cancelBtn);
+
+                teleporter.sendMessage(countdownMsg);
                 count--;
             }
         };
 
         int id = runner.runTaskTimer(plugin, 0L, 20L).getTaskId();
         myTaskId[0] = id;
-        pendingTeleports.put(pid, id);
+        pendingTeleports.put(teleporterId, new TeleportSession(id, teleporterId, targetId));
+    }
+
+    private static final class TeleportSession {
+        private final int taskId;
+        private final UUID teleporter;
+        private final UUID target;
+
+        private TeleportSession(int taskId, UUID teleporter, UUID target) {
+            this.taskId = taskId;
+            this.teleporter = teleporter;
+            this.target = target;
+        }
     }
 
     private static final class RequestKey {
