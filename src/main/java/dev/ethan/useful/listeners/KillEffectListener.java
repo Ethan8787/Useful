@@ -8,9 +8,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import top.nontage.nontagelib.annotations.AutoListener;
 
 import java.util.UUID;
 
+@AutoListener
 public class KillEffectListener implements Listener {
     private final GameManager gameManager = Main.getInstance().getGameManager();
     private final AceUtil aceUtil = Main.getInstance().getAceUtil();

@@ -10,9 +10,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import top.nontage.nontagelib.annotations.AutoListener;
 
 import java.util.UUID;
 
+@AutoListener
 public class CrystalListener implements Listener {
 
     private final GameManager gameManager = Main.getInstance().getGameManager();

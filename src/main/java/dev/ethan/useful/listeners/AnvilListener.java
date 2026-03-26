@@ -7,7 +7,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import top.nontage.nontagelib.annotations.AutoListener;
 
+@AutoListener
 public class AnvilListener implements Listener {
     @EventHandler
     public void onAnvilUse(PrepareAnvilEvent e) {

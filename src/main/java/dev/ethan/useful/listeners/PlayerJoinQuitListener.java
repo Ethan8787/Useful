@@ -18,11 +18,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.metadata.FixedMetadataValue;
+import top.nontage.nontagelib.annotations.AutoListener;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+@AutoListener
 public class PlayerJoinQuitListener implements Listener {
     private final LuckPermsUtil luckPermsUtil = Main.getInstance().getLuckPermsUtil();
     private final IPTrackerUtil ipTrackerUtil = Main.getInstance().getIPTrackerUtil();

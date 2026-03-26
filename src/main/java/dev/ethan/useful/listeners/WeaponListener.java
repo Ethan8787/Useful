@@ -13,7 +13,9 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
+import top.nontage.nontagelib.annotations.AutoListener;
 
+@AutoListener
 public class WeaponListener implements Listener {
     private final PlayerUtil playerUtil = Main.getInstance().getPlayerUtil();
 

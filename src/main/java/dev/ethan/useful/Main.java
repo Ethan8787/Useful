@@ -34,6 +34,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import top.nontage.nontagelib.command.NontageCommandLoader;
+import top.nontage.nontagelib.listener.ListenerRegister;
 
 public final class Main extends JavaPlugin {
 
@@ -135,15 +136,7 @@ public final class Main extends JavaPlugin {
     }
 
     private void registerListeners() {
-        PluginManager pm = Bukkit.getPluginManager();
-        pm.registerEvents(new PlayerJoinQuitListener(), this);
-        pm.registerEvents(new MovementListener(), this);
-        pm.registerEvents(new WeaponListener(), this);
-        pm.registerEvents(new AnvilListener(), this);
-        pm.registerEvents(new DeathListener(), this);
-        pm.registerEvents(new KillEffectListener(), this);
-        pm.registerEvents(new CommandBlockerListener(), this);
-        pm.registerEvents(new CrystalListener(), this);
+        ListenerRegister.registerAll(this);
         getLogger().info("All listeners registered");
     }
 
