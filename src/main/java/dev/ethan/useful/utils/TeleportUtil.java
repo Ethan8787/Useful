@@ -520,10 +520,8 @@ public class TeleportUtil {
                 Component countdownMsg = legacy(Messages.PREFIX)
                         .append(text("將在 ", NamedTextColor.WHITE))
                         .append(text(count, NamedTextColor.YELLOW))
-                        .append(text(" 秒後傳送到 ", NamedTextColor.WHITE))
-                        .append(legacy(targetNameRaw))
+                        .append(text(" 秒後傳送", NamedTextColor.WHITE))
                         .append(cancelBtn);
-
                 teleporter.sendMessage(countdownMsg);
                 count--;
             }

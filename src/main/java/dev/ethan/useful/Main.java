@@ -81,7 +81,6 @@ public final class Main extends JavaPlugin {
     private void initServices() {
         luckPermsUtil = new LuckPermsUtil(this);
         playerBlockingUtil = new PlayerBlockingUtil(this, luckPermsUtil);
-
         teleportUtil = new TeleportUtil(this);
         messageUtil = new MessageUtil(this);
         snowballUtil = new SnowballUtil(this);
@@ -114,17 +113,14 @@ public final class Main extends JavaPlugin {
     }
 
     private void shutdownServices() {
-
         try {
-
             if (playerBlockingUtil != null) {
                 playerBlockingUtil.save();
             }
-
             if (nickUtil != null) {
                 nickUtil.close();
             }
-
+            Bukkit.getScheduler().cancelTasks(this);
         } catch (Exception ex) {
             getLogger().severe("Shutdown error: " + ex.getMessage());
         }

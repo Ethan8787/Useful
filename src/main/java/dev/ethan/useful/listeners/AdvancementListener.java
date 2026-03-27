@@ -20,24 +20,14 @@ public class AdvancementListener implements Listener {
     public void onAdvancementDone(PlayerAdvancementDoneEvent e) {
         if (e.getAdvancement().getDisplay() == null) return;
         if (!e.getAdvancement().getDisplay().doesAnnounceToChat()) return;
-
         Player player = e.getPlayer();
-
         String prefixStr = luckPermsUtil.getPlayerPrefix(player);
-        Component prefix = LegacyComponentSerializer.legacySection().deserialize(prefixStr);
-
-        String name = player.getDisplayName();
-        Component playerName = LegacyComponentSerializer.legacySection().deserialize(name);
-
-        Component playerWithPrefix = Component.text().append(prefix).append(playerName).build();
-
+        String nameWithPrefix = prefixStr + player.displayName();
+        Component playerNameComponent = Component.text(nameWithPrefix);
         Component advTitle = e.getAdvancement().getDisplay().displayName();
-
         String frameName = e.getAdvancement().getDisplay().frame().name().toLowerCase();
         String translationKey = "chat.type.advancement." + frameName;
-
-        Component formattedMessage = Component.translatable(translationKey, playerWithPrefix, advTitle);
-
+        Component formattedMessage = Component.translatable(translationKey, playerNameComponent, advTitle);
         e.message(formattedMessage);
     }
 }
