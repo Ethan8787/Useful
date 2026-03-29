@@ -20,21 +20,17 @@ import java.util.Objects;
 
 @CommandInfo(name = "heal", permission = "useful.admin.heal", description = "Heal yourself or others", override = true)
 public class HealCommand implements NontageCommand {
-
     private final LuckPermsUtil luckPermsUtil = Main.getInstance().getLuckPermsUtil();
 
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
-
         if (!(sender instanceof Player player)) return;
-
         if (args.length == 0) {
             healFull(player);
             player.sendMessage(Messages.PREFIX + "§d已治癒");
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
             return;
         }
-
         if (args[0].equals("*")) {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 healFull(online);
@@ -43,21 +39,17 @@ public class HealCommand implements NontageCommand {
             player.sendMessage(Messages.PREFIX + "§d已治癒所有線上玩家");
             return;
         }
-
         try {
             double value = Double.parseDouble(args[0]);
             double maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue();
-
             if (value < 0 || value > maxHealth) {
                 player.sendMessage(Messages.PREFIX + "§c血量必須在 0 到 " + maxHealth + " 之間");
                 return;
             }
-
             player.setHealth(value);
             player.setFireTicks(0);
             player.sendMessage(Messages.PREFIX + "§d已設定生命值為 " + value);
             return;
-
         } catch (NumberFormatException ignored) {
         }
 

@@ -1,7 +1,9 @@
 package dev.ethan.useful.listeners;
 
 import dev.ethan.useful.Main;
+import dev.ethan.useful.managers.DataManager;
 import dev.ethan.useful.managers.GameManager;
+import dev.ethan.useful.models.PlayerData;
 import dev.ethan.useful.utils.LuckPermsUtil;
 import dev.ethan.useful.utils.TranslationUtil;
 import net.kyori.adventure.text.Component;
@@ -21,16 +23,24 @@ public class DeathListener implements Listener {
     private final LuckPermsUtil luckPermsUtil = Main.getInstance().getLuckPermsUtil();
     private final TranslationUtil translationUtil = Main.getInstance().getTranslationUtil();
     private final GameManager gameManager = Main.getInstance().getGameManager();
+    private final DataManager dataManager = Main.getInstance().getDataManager();
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent e) {
         Player victim = e.getEntity();
+        Player killer = victim.getKiller();
         UUID vUUID = victim.getUniqueId();
 
+        PlayerData victimData = dataManager.getPlayerData(vUUID);
+        victimData.deaths++;
         gameManager.resetKillStreak(vUUID);
 
-        EntityDamageEvent damageEvent = victim.getLastDamageCause();
+        if (killer != null && !killer.equals(victim)) {
+            PlayerData killerData = dataManager.getPlayerData(killer.getUniqueId());
+            killerData.kills++;
+        }
 
+        EntityDamageEvent damageEvent = victim.getLastDamageCause();
         Component message = translationUtil.buildDeathMessage(
                 luckPermsUtil,
                 gameManager,

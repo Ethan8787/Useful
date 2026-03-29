@@ -3,7 +3,6 @@ package dev.ethan.useful.listeners;
 import dev.ethan.useful.Main;
 import dev.ethan.useful.utils.LuckPermsUtil;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

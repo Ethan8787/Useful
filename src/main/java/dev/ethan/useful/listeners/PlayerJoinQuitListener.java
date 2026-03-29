@@ -11,7 +11,6 @@ import dev.iiahmed.disguise.DisguiseManager;
 import dev.iiahmed.disguise.SkinAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

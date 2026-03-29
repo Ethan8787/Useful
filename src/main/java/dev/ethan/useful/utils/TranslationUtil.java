@@ -1,6 +1,5 @@
 package dev.ethan.useful.utils;
 
-import dev.ethan.useful.constants.Messages;
 import dev.ethan.useful.managers.GameManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -26,7 +25,7 @@ public class TranslationUtil {
         Component victimName = buildPlayerName(luckPermsUtil, victim);
 
         if (event == null) {
-            return header(Component.translatable("death.attack.generic", victimName));
+            return Component.translatable("death.attack.generic", victimName);
         }
 
         EntityDamageEvent.DamageCause cause = event.getCause();
@@ -55,16 +54,16 @@ public class TranslationUtil {
                         );
 
                         if (namedItem != null) {
-                            return header(Component.translatable(
+                            return Component.translatable(
                                     "death.attack.arrow.item",
                                     victimName,
                                     killerName,
                                     namedItem
-                            ));
+                            );
                         }
                     }
 
-                    return header(Component.translatable(key, victimName, killerName));
+                    return Component.translatable(key, victimName, killerName);
                 }
             }
 
@@ -76,14 +75,14 @@ public class TranslationUtil {
                         : null;
 
                 if (killerName != null) {
-                    return header(Component.translatable(
+                    return Component.translatable(
                             "death.attack.explosion.player",
                             victimName,
                             killerName
-                    ));
+                    );
                 }
 
-                return header(Component.translatable("death.attack.explosion", victimName));
+                return Component.translatable("death.attack.explosion", victimName);
             }
 
             if (attacker instanceof Player killerPlayer) {
@@ -94,19 +93,19 @@ public class TranslationUtil {
                 );
 
                 if (namedItem != null) {
-                    return header(Component.translatable(
+                    return Component.translatable(
                             "death.attack.player.item",
                             victimName,
                             killerName,
                             namedItem
-                    ));
+                    );
                 }
 
-                return header(Component.translatable(
+                return Component.translatable(
                         "death.attack.player",
                         victimName,
                         killerName
-                ));
+                );
             }
 
             if (damager instanceof Tameable tameable
@@ -118,11 +117,11 @@ public class TranslationUtil {
                         .append(Component.text(" 的 ", NamedTextColor.WHITE))
                         .append(petName);
 
-                return header(Component.translatable(
+                return Component.translatable(
                         "death.attack.mob",
                         victimName,
                         killerName
-                ));
+                );
             }
 
             if (attacker != null) {
@@ -130,28 +129,28 @@ public class TranslationUtil {
                 Component killerName = entityName(luckPermsUtil, attacker);
 
                 if (cause == EntityDamageEvent.DamageCause.SONIC_BOOM) {
-                    return header(Component.translatable(
+                    return Component.translatable(
                             "death.attack.sonic_boom",
                             victimName,
                             killerName
-                    ));
+                    );
                 }
 
-                return header(Component.translatable(
+                return Component.translatable(
                         "death.attack.mob",
                         victimName,
                         killerName
-                ));
+                );
             }
         }
 
         String key = nonEntityCauseKey(cause);
 
         if (key != null) {
-            return header(Component.translatable(key, victimName));
+            return Component.translatable(key, victimName);
         }
 
-        return header(Component.translatable("death.attack.generic", victimName));
+        return Component.translatable("death.attack.generic", victimName);
     }
 
     private KillerContext resolveKiller(EntityDamageByEntityEvent ev, GameManager gameManager) {
@@ -206,13 +205,7 @@ public class TranslationUtil {
     private Component entityName(LuckPermsUtil luckPermsUtil, Entity e) {
         if (e instanceof Player p) return buildPlayerName(luckPermsUtil, p);
         Component displayName = e.name();
-        return displayName.colorIfAbsent(NamedTextColor.GRAY);
-    }
-
-    private Component header(Component inner) {
-        return Component.text("死亡 ", NamedTextColor.DARK_RED)
-                .append(Component.text("» ", NamedTextColor.GRAY))
-                .append(inner.colorIfAbsent(NamedTextColor.WHITE));
+        return displayName.colorIfAbsent(NamedTextColor.WHITE);
     }
 
     private Component namedItem(ItemStack item) {

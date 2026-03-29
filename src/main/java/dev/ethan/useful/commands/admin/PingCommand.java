@@ -1,7 +1,7 @@
 package dev.ethan.useful.commands.admin;
 
-import dev.ethan.useful.constants.Messages;
 import dev.ethan.useful.Main;
+import dev.ethan.useful.constants.Messages;
 import dev.ethan.useful.utils.LuckPermsUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

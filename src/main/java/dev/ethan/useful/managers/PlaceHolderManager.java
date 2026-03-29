@@ -1,15 +1,22 @@
 package dev.ethan.useful.managers;
 
+import dev.ethan.useful.Main;
+import dev.ethan.useful.models.PlayerData;
+import dev.ethan.useful.utils.PlayTimeUtil;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.text.DecimalFormat;
 
 public class PlaceHolderManager extends PlaceholderExpansion {
     private final JavaPlugin plugin;
+    private final DecimalFormat df = new DecimalFormat("#.##");
 
     public PlaceHolderManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -37,13 +44,42 @@ public class PlaceHolderManager extends PlaceholderExpansion {
     }
 
     @Override
+    public boolean persist() {
+        return true;
+    }
+
+    @Override
     public boolean canRegister() {
         return true;
     }
 
     @Override
-    public String onPlaceholderRequest(Player p, @NotNull String params) {
+    public String onRequest(OfflinePlayer player, @NotNull String params) {
+        if (player == null) return "";
+
         switch (params.toLowerCase()) {
+
+            case "kills" -> {
+                PlayerData data = Main.getInstance().getDataManager().getPlayerData(player.getUniqueId());
+                return String.valueOf(data.kills);
+            }
+
+            case "deaths" -> {
+                PlayerData data = Main.getInstance().getDataManager().getPlayerData(player.getUniqueId());
+                return String.valueOf(data.deaths);
+            }
+
+            case "balance" -> {
+                Economy econ = EconomyManager.getEconomy();
+                if (econ == null) return "0";
+                double bal = econ.getBalance(player);
+                return formatShortValue(bal);
+            }
+
+            case "playtime" -> {
+                PlayerData data = Main.getInstance().getDataManager().getPlayerData(player.getUniqueId());
+                return PlayTimeUtil.formatPlayTime(data.playTimeSeconds);
+            }
 
             case "ram" -> {
                 Runtime runtime = Runtime.getRuntime();
@@ -57,6 +93,8 @@ public class PlaceHolderManager extends PlaceholderExpansion {
             }
 
             case "real_health" -> {
+                Player p = player.getPlayer();
+                if (p == null) return "0.0";
                 double currentHealth = p.getHealth();
                 double absorption = p.getAbsorptionAmount();
                 double total = currentHealth + absorption;
@@ -77,16 +115,37 @@ public class PlaceHolderManager extends PlaceholderExpansion {
                     from = Color.decode("#FF5555");
                     to = Color.decode("#AA0000");
                 }
-
-                return formatGradient(String.format("%.2f", tps), from, to) +
-                        "§7/" +
-                        formatGradient("20.00", "#55FF55", "#00AA00");
+                return formatGradient(String.format("%.1f", tps), from, to);
             }
 
-            default -> {
-                return null;
+            case "ping" -> {
+                Player p = player.getPlayer();
+                if (p == null) return "0";
+                int ping = p.getPing();
+                Color from, to;
+
+                if (ping <= 50) {
+                    from = Color.decode("#55FF55");
+                    to = Color.decode("#00AA00");
+                } else if (ping <= 150) {
+                    from = Color.decode("#FFFF55");
+                    to = Color.decode("#FFAA00");
+                } else {
+                    from = Color.decode("#FF5555");
+                    to = Color.decode("#AA0000");
+                }
+                return formatGradient(String.valueOf(ping), from, to);
             }
         }
+        return null;
+    }
+
+    private String formatShortValue(double amount) {
+        if (amount < 1000) return String.valueOf((int) amount);
+        if (amount < 1000000) return df.format(amount / 1000.0) + "K";
+        if (amount < 1000000000) return df.format(amount / 1000000.0) + "M";
+        if (amount < 1000000000000L) return df.format(amount / 1000000000.0) + "B";
+        return df.format(amount / 1000000000000.0) + "T";
     }
 
     private String formatGradient(String text, String startHex, String endHex) {
@@ -96,6 +155,7 @@ public class PlaceHolderManager extends PlaceholderExpansion {
     private String formatGradient(String text, Color start, Color end) {
         StringBuilder sb = new StringBuilder();
         int length = text.length();
+        if (length <= 1) return "&#" + String.format("%02X%02X%02X", start.getRed(), start.getGreen(), start.getBlue()) + text;
 
         for (int i = 0; i < length; i++) {
             float ratio = (float) i / (length - 1);

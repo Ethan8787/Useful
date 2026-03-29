@@ -22,16 +22,13 @@ public class FlyCommand implements NontageCommand {
 
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
-
         if (!(sender instanceof Player player)) return;
-
         if (args.length == 0) {
             toggleFly(player);
             player.sendMessage(Messages.PREFIX + "§f飛行狀態 "
                     + (player.getAllowFlight() ? "§aOn" : "§cOff"));
             return;
         }
-
         if (args[0].equals("*")) {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 toggleFly(online);
@@ -39,35 +36,28 @@ public class FlyCommand implements NontageCommand {
             player.sendMessage(Messages.PREFIX + "§d已切換所有線上玩家飛行狀態");
             return;
         }
-
         Player targetPlayer = Bukkit.getPlayer(args[0]);
         if (targetPlayer == null) {
             player.sendMessage(Messages.PREFIX + "§c玩家不存在");
             return;
         }
-
         toggleFly(targetPlayer);
-
         if (player.equals(targetPlayer)) {
             player.sendMessage(Messages.PREFIX + "§f飛行狀態 "
                     + (targetPlayer.getAllowFlight() ? "§aOn" : "§cOff"));
             return;
         }
-
         player.sendMessage(Messages.PREFIX
                 + luckPermsUtil.getPlayerPrefix(targetPlayer)
                 + targetPlayer.getName()
                 + " §f的飛行狀態 "
                 + (targetPlayer.getAllowFlight() ? "§aOn" : "§cOff"));
-
         targetPlayer.sendMessage(Messages.PREFIX + "§f您的飛行狀態已被更新為 "
                 + (targetPlayer.getAllowFlight() ? "§aOn" : "§cOff"));
     }
-
     private void toggleFly(Player target) {
         target.setAllowFlight(!target.getAllowFlight());
     }
-
     @Override
     public List<String> onTabComplete(CommandSender sender, String label, String[] args, Location location) {
         List<String> completions = new ArrayList<>();

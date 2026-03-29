@@ -2,36 +2,12 @@ package dev.ethan.useful;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import dev.ethan.useful.constants.Messages;
-import dev.ethan.useful.listeners.AnvilListener;
-import dev.ethan.useful.listeners.CommandBlockerListener;
-import dev.ethan.useful.listeners.CrystalListener;
-import dev.ethan.useful.listeners.DeathListener;
-import dev.ethan.useful.listeners.KillEffectListener;
-import dev.ethan.useful.listeners.MovementListener;
-import dev.ethan.useful.listeners.PlayerJoinQuitListener;
-import dev.ethan.useful.listeners.WeaponListener;
-import dev.ethan.useful.managers.GameManager;
-import dev.ethan.useful.managers.PlaceHolderManager;
-import dev.ethan.useful.managers.PlayerStatusManager;
-import dev.ethan.useful.utils.AceUtil;
-import dev.ethan.useful.utils.BotUtil;
-import dev.ethan.useful.utils.ConsoleUtil;
-import dev.ethan.useful.utils.CrashUtil;
-import dev.ethan.useful.utils.HomeUtil;
-import dev.ethan.useful.utils.IPTrackerUtil;
-import dev.ethan.useful.utils.LuckPermsUtil;
-import dev.ethan.useful.utils.MessageUtil;
-import dev.ethan.useful.utils.NickUtil;
-import dev.ethan.useful.utils.PlayerBlockingUtil;
-import dev.ethan.useful.utils.PlayerUtil;
-import dev.ethan.useful.utils.SnowballUtil;
-import dev.ethan.useful.utils.TeleportUtil;
-import dev.ethan.useful.utils.TranslationUtil;
+import dev.ethan.useful.managers.*;
+import dev.ethan.useful.utils.*;
 import dev.iiahmed.disguise.DisguiseManager;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import top.nontage.nontagelib.command.NontageCommandLoader;
 import top.nontage.nontagelib.listener.ListenerRegister;
@@ -50,12 +26,16 @@ public final class Main extends JavaPlugin {
     private PlayerUtil playerUtil;
     private SnowballUtil snowballUtil;
     private TeleportUtil teleportUtil;
+    private PlayTimeUtil playTimeUtil;
     private TranslationUtil translationUtil;
     private NickUtil nickUtil;
     private PlayerBlockingUtil playerBlockingUtil;
     private PlayerStatusManager playerStatusManager;
     private PlaceHolderManager placeHolderManager;
     private GameManager gameManager;
+    private EconomyManager economyManager;
+    private DataManager dataManager;
+    private ShopManager shopManager;
 
     @Override
     public void onLoad() {
@@ -89,14 +69,18 @@ public final class Main extends JavaPlugin {
         nickUtil = new NickUtil(this);
 
         gameManager = new GameManager();
+        shopManager = new ShopManager(this);
         playerUtil = new PlayerUtil(gameManager);
 
         translationUtil = new TranslationUtil();
         aceUtil = new AceUtil();
         botUtil = new BotUtil();
         crashUtil = new CrashUtil();
+        playTimeUtil = new PlayTimeUtil();
 
         placeHolderManager = new PlaceHolderManager(this);
+        economyManager = new EconomyManager(this);
+        dataManager = new DataManager(this);
         playerStatusManager = new PlayerStatusManager(this);
 
         getLogger().info("All services initialized");
@@ -119,6 +103,9 @@ public final class Main extends JavaPlugin {
             }
             if (nickUtil != null) {
                 nickUtil.close();
+            }
+            if (dataManager != null) {
+                dataManager.saveAll();
             }
             Bukkit.getScheduler().cancelTasks(this);
         } catch (Exception ex) {
@@ -204,6 +191,10 @@ public final class Main extends JavaPlugin {
         return playerStatusManager;
     }
 
+    public PlayTimeUtil getPlayTimeUtil() {
+        return playTimeUtil;
+    }
+
     public TeleportUtil getTeleportUtil() {
         return teleportUtil;
     }
@@ -214,6 +205,18 @@ public final class Main extends JavaPlugin {
 
     public GameManager getGameManager() {
         return gameManager;
+    }
+
+    public EconomyManager getEconomyManager() {
+        return economyManager;
+    }
+
+    public DataManager getDataManager() {
+        return dataManager;
+    }
+
+    public ShopManager getShopManager() {
+        return shopManager;
     }
 
     public NickUtil getNickUtil() {

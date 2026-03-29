@@ -13,16 +13,12 @@ public class DupeCommand implements NontageCommand {
 
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
-
         if (!(sender instanceof Player p)) return;
-
         ItemStack item = p.getInventory().getItemInMainHand();
-
         if (item.getType() == Material.AIR) {
             p.sendMessage(Messages.PREFIX + "§c手上沒有物品");
             return;
         }
-
         p.getInventory().addItem(item.clone());
     }
 }
