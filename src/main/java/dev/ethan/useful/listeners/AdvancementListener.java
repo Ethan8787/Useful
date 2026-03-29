@@ -10,7 +10,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import top.nontage.nontagelib.annotations.AutoListener;
 
-//todo: fix the name color
 @AutoListener
 public class AdvancementListener implements Listener {
 
@@ -21,13 +20,11 @@ public class AdvancementListener implements Listener {
         if (e.getAdvancement().getDisplay() == null) return;
         if (!e.getAdvancement().getDisplay().doesAnnounceToChat()) return;
         Player player = e.getPlayer();
-        String prefixStr = luckPermsUtil.getPlayerPrefix(player);
-        String nameWithPrefix = prefixStr + player.displayName();
-        Component playerNameComponent = Component.text(nameWithPrefix);
+        Component playerName = Component.text(luckPermsUtil.getPlayerPrefix(player) + player.getDisplayName());
         Component advTitle = e.getAdvancement().getDisplay().displayName();
         String frameName = e.getAdvancement().getDisplay().frame().name().toLowerCase();
         String translationKey = "chat.type.advancement." + frameName;
-        Component formattedMessage = Component.translatable(translationKey, playerNameComponent, advTitle);
+        Component formattedMessage = Component.translatable(translationKey, playerName, advTitle);
         e.message(formattedMessage);
     }
 }
